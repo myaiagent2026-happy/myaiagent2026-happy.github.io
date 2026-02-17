@@ -133,6 +133,7 @@
       const nums = new Array(5).fill(null);
       const now = performance.now();
       dice.forEach((d,i)=>{
+        d.idx = i; // ensure index present
         const v = Math.floor(Math.random()*6)+1;
         nums[i] = v; d.value = v;
         d.start.copy(d.mesh.rotation);
@@ -145,22 +146,16 @@
         d.dur = 4000 + i*100;
       });
 
-      // sequential reveal: after all dice settle, show one number at a time, then total
-      setTimeout(()=>{
-        let revealed = 0;
-        function showNext(){
-          if(revealed < nums.length){
-            const line = [...nums].map((n,idx)=>(idx<=revealed ? n : '-')).join(' ・ ');
-            vals.textContent = line;
-            revealed++;
-            setTimeout(showNext, 180);
-          }else{
-            const s = nums.reduce((a,b)=>a+b,0);
-            setTimeout(()=>{ sum.textContent = s; sumTop.textContent = s; }, 200);
-          }
-        }
-        showNext();
-      }, 4600); // after the longest die finishes
+      // Clear previous results immediately
+      vals.textContent = '- ・ - ・ - ・ - ・ -';
+      sum.textContent = '0';
+      sumTop.textContent = '0';
+
+      // Shared state for this roll
+      dice.rollNums = nums;
+      dice.rollFinished = new Array(5).fill(false);
+      // Reset per-die revealed flags
+      dice.forEach(d => d._revealed = false);
     }
 
     function animate(t){
@@ -171,6 +166,23 @@
         d.mesh.rotation.y = d.start.y + (d.target.y - d.start.y)*e;
         d.mesh.rotation.z = d.start.z + (d.target.z - d.start.z)*e;
         d.mesh.position.y = (p<1)? Math.sin(p*Math.PI)*0.6 : 0;
+
+        // Reveal this die as soon as it finishes its spin
+        if(dice.rollFinished && t >= (d.t0 + d.dur) && !d._revealed) {
+          d._revealed = true;
+          dice.rollFinished[d.idx] = true;
+          // update displayed line immediately
+          const line = dice.rollNums.map((n,i) => dice.rollFinished[i] ? n : '-').join(' ・ ');
+          vals.textContent = line;
+          // if all dice revealed, show total after short delay
+          if(dice.rollFinished.every(Boolean)) {
+            setTimeout(() => {
+              const s = dice.rollNums.reduce((a,b)=>a+b,0);
+              sum.textContent = s;
+              sumTop.textContent = s;
+            }, 200);
+          }
+        }
       }
       renderer.render(scene,camera);
       requestAnimationFrame(animate);
