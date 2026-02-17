@@ -3,126 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>大話骰（五粒骰）</title>
+  <title>大話骰 · 5粒骰</title>
   <style>
     :root{
-      --bg:#0f172a;
-      --card:#111827;
-      --text:#f8fafc;
-      --sub:#cbd5e1;
-      --accent:#22c55e;
-      --accent2:#16a34a;
+      --bg1:#061726; --bg2:#0b2b22; --glass:rgba(13,24,42,.58); --line:rgba(255,255,255,.15);
+      --txt:#f8fafc; --sub:#cbd5e1; --ok:#22c55e; --ok2:#16a34a; --accent:#38bdf8;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     body{
-      margin:0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", sans-serif;
-      color:var(--text);
-      background: radial-gradient(1200px 700px at 50% -10%, #1e293b 0%, var(--bg) 55%);
-      min-height:100dvh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding:16px;
+      margin:0; min-height:100dvh; color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+      background:
+        radial-gradient(900px 500px at 10% -10%, #134e4a66 0%, transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, #0ea5e955 0%, transparent 60%),
+        linear-gradient(160deg,var(--bg1),var(--bg2));
+      display:flex; align-items:center; justify-content:center; padding:14px;
+      overflow:hidden;
     }
+    .orb{position:fixed;border-radius:50%;filter:blur(28px);opacity:.24;pointer-events:none;animation:float 8s ease-in-out infinite}
+    .o1{width:180px;height:180px;background:#22c55e;left:-40px;top:10%}
+    .o2{width:230px;height:230px;background:#38bdf8;right:-70px;bottom:8%;animation-delay:1.5s}
+    @keyframes float{50%{transform:translateY(-16px) translateX(8px)}}
+
     .app{
-      width:min(100%,430px);
-      background:rgba(17,24,39,.85);
-      border:1px solid rgba(148,163,184,.25);
-      border-radius:22px;
-      padding:18px 16px 20px;
-      box-shadow:0 18px 60px rgba(0,0,0,.45);
-      backdrop-filter: blur(8px);
+      width:min(100%,430px); border:1px solid var(--line); border-radius:24px;
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),var(--glass);
+      backdrop-filter: blur(9px); box-shadow:0 18px 60px rgba(0,0,0,.45);
+      padding:18px 14px 16px;
     }
-    h1{font-size:24px;margin:4px 0 4px;text-align:center}
-    .sub{margin:0 0 14px;text-align:center;color:var(--sub);font-size:14px}
-    .dice-wrap{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin:10px 0 16px;
-    }
+    h1{margin:2px 0 2px;text-align:center;font-size:26px;letter-spacing:.3px}
+    .sub{margin:0 0 12px;text-align:center;color:var(--sub);font-size:14px}
+    .toprow{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .chip{font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--sub)}
+    .switch{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub)}
+    .switch input{accent-color:#22c55e}
+
+    .dice-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px}
     .die{
-      aspect-ratio:1/1;
-      border-radius:16px;
-      background:#f8fafc;
-      color:#111827;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:46px;
-      font-weight:700;
-      box-shadow: inset 0 -8px 14px rgba(0,0,0,.12), 0 7px 16px rgba(0,0,0,.28);
-      transition: transform .12s ease;
-      user-select:none;
+      aspect-ratio:1/1; border-radius:16px; position:relative;
+      background:linear-gradient(145deg,#ffffff,#e5e7eb);
+      box-shadow:inset 0 -8px 14px rgba(0,0,0,.16), 0 10px 18px rgba(0,0,0,.35);
+      transition:transform .12s ease;
     }
-    .die.shake{animation:shake .55s ease}
-    @keyframes shake{
-      0%{transform:translateX(0) rotate(0)}
-      18%{transform:translateX(-4px) rotate(-2deg)}
-      36%{transform:translateX(5px) rotate(2.4deg)}
-      54%{transform:translateX(-4px) rotate(-1.7deg)}
-      72%{transform:translateX(4px) rotate(1.6deg)}
-      100%{transform:translateX(0) rotate(0)}
-    }
+    .die.shake{animation:shake .5s ease}
+    @keyframes shake{18%{transform:translateX(-4px) rotate(-2deg)}36%{transform:translateX(5px) rotate(2deg)}56%{transform:translateX(-4px) rotate(-1.6deg)}76%{transform:translateX(4px) rotate(1.5deg)}}
+    .pip{position:absolute;width:14px;height:14px;border-radius:50%;background:#111827;box-shadow:inset 0 -1px 0 rgba(255,255,255,.35)}
+    .r{top:50%;right:14px;transform:translateY(-50%)}
+
     .btn{
-      width:100%;
-      border:none;
-      border-radius:14px;
-      font-size:20px;
-      font-weight:700;
-      color:#052e16;
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      padding:14px 14px;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(34,197,94,.35);
+      width:100%; border:none; border-radius:14px; padding:14px; cursor:pointer;
+      font-size:20px; font-weight:800; color:#04230e;
+      background:linear-gradient(180deg,var(--ok),var(--ok2));
+      box-shadow:0 12px 24px rgba(34,197,94,.32);
     }
-    .btn:active{transform:scale(.985)}
-    .result{margin-top:10px;text-align:center;color:var(--sub);font-size:15px}
+    .btn:active{transform:scale(.987)}
+    .result{margin:12px 0 0;text-align:center;color:#e2e8f0;font-size:15px}
+    .hint{margin:8px 0 0;text-align:center;color:#93c5fd;font-size:12px}
   </style>
 </head>
 <body>
+  <div class="orb o1"></div><div class="orb o2"></div>
   <main class="app">
     <h1>🎲 大話骰</h1>
-    <p class="sub">五粒骰，撳一下即刻擲</p>
+    <p class="sub">手機版 · 5 粒骰 · 一撳即擲</p>
+
+    <div class="toprow">
+      <span class="chip" id="sumChip">總點數：0</span>
+      <label class="switch"><input type="checkbox" id="soundToggle" checked> 音效</label>
+    </div>
+
     <section class="dice-wrap" id="diceWrap"></section>
-    <button class="btn" id="rollBtn">擲骰</button>
+    <button id="rollBtn" class="btn">擲骰</button>
     <p class="result" id="result"></p>
+    <p class="hint">提示：可輪流擲，方便冇實體骰時玩大話骰</p>
   </main>
 
-  <script>
-    const faces = ["⚀","⚁","⚂","⚃","⚄","⚅"];
-    const wrap = document.getElementById('diceWrap');
-    const result = document.getElementById('result');
-    const btn = document.getElementById('rollBtn');
-    const diceEls = [];
+<script>
+const wrap = document.getElementById('diceWrap');
+const result = document.getElementById('result');
+const sumChip = document.getElementById('sumChip');
+const soundToggle = document.getElementById('soundToggle');
+const btn = document.getElementById('rollBtn');
+const diceEls = [];
 
-    function createDice(){
-      for(let i=0;i<5;i++){
-        const d=document.createElement('div');
-        d.className='die';
-        d.textContent='⚀';
-        wrap.appendChild(d);
-        diceEls.push(d);
-      }
-    }
+const P = {
+  1:[[50,50]],
+  2:[[27,27],[73,73]],
+  3:[[27,27],[50,50],[73,73]],
+  4:[[27,27],[73,27],[27,73],[73,73]],
+  5:[[27,27],[73,27],[50,50],[27,73],[73,73]],
+  6:[[27,25],[73,25],[27,50],[73,50],[27,75],[73,75]],
+};
 
-    function roll(){
-      const nums=[];
-      diceEls.forEach((d)=>{
-        d.classList.remove('shake');
-        void d.offsetWidth;
-        d.classList.add('shake');
-        const n = Math.floor(Math.random()*6)+1;
-        nums.push(n);
-        d.textContent = faces[n-1];
-      });
-      result.textContent = `結果：${nums.join(' · ')}`;
-    }
+function setDieFace(el, n){
+  el.innerHTML='';
+  P[n].forEach(([x,y])=>{
+    const p=document.createElement('span');
+    p.className='pip';
+    p.style.left=`calc(${x}% - 7px)`;
+    p.style.top=`calc(${y}% - 7px)`;
+    el.appendChild(p);
+  });
+}
 
-    createDice();
-    roll();
-    btn.addEventListener('click', roll);
-  </script>
+function makeDice(){
+  for(let i=0;i<5;i++){
+    const d=document.createElement('div');
+    d.className='die';
+    wrap.appendChild(d);
+    diceEls.push(d);
+    setDieFace(d,1);
+  }
+}
+
+let audioCtx;
+function beep(freq, dur, vol=.03){
+  if(!soundToggle.checked) return;
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type='triangle'; o.frequency.value=freq;
+  g.gain.value=vol;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+
+function roll(){
+  const nums=[];
+  diceEls.forEach((d,i)=>{
+    d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+    const n=Math.floor(Math.random()*6)+1;
+    nums.push(n); setDieFace(d,n);
+    setTimeout(()=>beep(520 + n*35, .04, .02), i*25);
+  });
+  const sum=nums.reduce((a,b)=>a+b,0);
+  sumChip.textContent=`總點數：${sum}`;
+  result.textContent=`結果：${nums.join(' · ')}`;
+  setTimeout(()=>beep(420,.06,.025),180);
+}
+
+makeDice(); roll();
+btn.addEventListener('click', roll);
+</script>
 </body>
 </html>
