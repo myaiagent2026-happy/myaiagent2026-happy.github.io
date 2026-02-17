@@ -72,8 +72,8 @@
     for(let i=0;i<5;i++){
       const geo = new THREE.BoxGeometry(1.85,1.85,1.85);
       const die = new THREE.Mesh(geo, materialsFor());
-      die.position.set(-4.3 + i*2.15, 0, (i%2)*0.24);
-      die.rotation.set(-0.45 + i*0.05, 0.5 + i*0.12, 0);
+      die.position.set(-4.8 + i*2.4, 0, 0);
+      die.rotation.set(0, 0, 0);
       scene.add(die);
       dice.push({mesh:die, target:new THREE.Euler(), start:new THREE.Euler(), t0:0, dur:900, value:1});
     }
@@ -108,9 +108,12 @@
         const v=Math.floor(Math.random()*6)+1; d.value=v; nums.push(v);
         d.start.copy(d.mesh.rotation);
         const [rx,ry,rz] = rotFor(v);
-        d.target.set(rx + (Math.PI*6 + Math.random()*Math.PI*4), ry + (Math.PI*6 + Math.random()*Math.PI*4), rz + (Math.PI*2*Math.random()));
+        const spinX = 2*Math.PI*(3 + Math.floor(Math.random()*3));
+        const spinY = 2*Math.PI*(3 + Math.floor(Math.random()*3));
+        const spinZ = 2*Math.PI*(2 + Math.floor(Math.random()*2));
+        d.target.set(rx + spinX, ry + spinY, rz + spinZ);
         d.t0 = now + i*35;
-        d.dur = 820 + i*30;
+        d.dur = 860 + i*25;
       });
       const s=nums.reduce((a,b)=>a+b,0);
       vals.textContent = nums.join(' ・ ');
