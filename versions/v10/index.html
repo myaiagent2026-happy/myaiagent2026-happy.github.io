@@ -47,7 +47,8 @@
     const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    camera.position.set(0, 5.2, 9.2);
+    camera.position.set(0, 4.2, 8.8);
+    camera.lookAt(0, 0, 0);
 
     const light1 = new THREE.HemisphereLight(0xffffff, 0x1a3a26, 1.2); scene.add(light1);
     const light2 = new THREE.DirectionalLight(0xffffff, 1.1); light2.position.set(4,8,5); scene.add(light2);
