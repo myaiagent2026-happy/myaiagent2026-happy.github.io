@@ -40,12 +40,12 @@ function rotFor(v){
   // Make TOP face equal to rolled value at rest.
   // Material mapping on BoxGeometry: +X=1, -X=6, +Y=2, -Y=5, +Z=3, -Z=4
   return {
-    1:[0,0,-Math.PI/2],      // +X -> +Y
+    1:[0,0, Math.PI/2],      // -X -> +Y (fix 1/6 swap)
     2:[0,0,0],               // +Y already top
     3:[-Math.PI/2,0,0],      // +Z -> +Y
     4:[ Math.PI/2,0,0],      // -Z -> +Y
     5:[ Math.PI,0,0],        // -Y -> +Y
-    6:[0,0, Math.PI/2]       // -X -> +Y
+    6:[0,0,-Math.PI/2]       // +X -> +Y (fix 1/6 swap)
   }[v]
 }
 function setSize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}setSize();window.addEventListener('resize',setSize);
