@@ -14,7 +14,7 @@
     .sub{color:var(--muted);font-weight:600;letter-spacing:1px}
     .pill{margin:12px auto;display:block;width:max-content;padding:8px 16px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff2a;color:#97e89f;font-weight:800}
     .stage{border:1px solid #ffffff1f;border-radius:18px;background:#0000002e;padding:8px;box-shadow:0 14px 30px #0000005a}
-    #view{width:100%;height:220px;border-radius:12px;display:block}
+    #view{width:100%;height:190px;border-radius:12px;display:block}
     .btn{margin-top:12px;width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:34px;font-weight:900;letter-spacing:3px;color:#08220f;background:linear-gradient(180deg,#79e67f,#3ec65a);box-shadow:0 12px 24px #26b84a66}
     .sound{margin:10px auto 0;background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:9px 16px;color:var(--muted);display:block}
     .res{margin-top:12px;border:1px solid #ffffff1f;border-radius:14px;background:#0000002a;padding:12px;text-align:center}
@@ -69,9 +69,9 @@
 
     const dice=[];
     for(let i=0;i<5;i++){
-      const geo = new THREE.BoxGeometry(2.05,2.05,2.05);
+      const geo = new THREE.BoxGeometry(1.85,1.85,1.85);
       const die = new THREE.Mesh(geo, materialsFor());
-      die.position.set(-4.8 + i*2.4, 0, (i%2)*0.28);
+      die.position.set(-4.3 + i*2.15, 0, (i%2)*0.24);
       die.rotation.set(-0.45 + i*0.05, 0.5 + i*0.12, 0);
       scene.add(die);
       dice.push({mesh:die, target:new THREE.Euler(), start:new THREE.Euler(), t0:0, dur:900, value:1});
