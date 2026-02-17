@@ -111,6 +111,7 @@
     const vals = document.getElementById('vals');
     const sum = document.getElementById('sum');
 
+    let lastNums = null; // remember previous roll's numbers to preserve display until they update
     let audioCtx=null, soundOn=true;
     function ensureAudio(){ if(!audioCtx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) audioCtx=new AC(); } if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }
     function play(){ if(!soundOn||!audioCtx) return; const t=audioCtx.currentTime; [220,300,340,280].forEach((hz,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0.0001,t+i*0.04);g.gain.exponentialRampToValueAtTime(0.03,t+i*0.04+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.04+0.12);o.connect(g).connect(audioCtx.destination);o.start(t+i*0.04);o.stop(t+i*0.04+0.13);}); }
@@ -133,7 +134,7 @@
       const nums = new Array(5).fill(null);
       const now = performance.now();
       dice.forEach((d,i)=>{
-        d.idx = i; // ensure index present
+        d.idx = i;
         const v = Math.floor(Math.random()*6)+1;
         nums[i] = v; d.value = v;
         d.start.copy(d.mesh.rotation);
@@ -146,8 +147,7 @@
         d.dur = 4000 + i*100;
       });
 
-      // Clear previous results immediately
-      vals.textContent = '- ・ - ・ - ・ - ・ -';
+      // Clear sum only; keep previous numbers visible until they update
       sum.textContent = '0';
       sumTop.textContent = '0';
 
@@ -171,15 +171,17 @@
         if(dice.rollFinished && t >= (d.t0 + d.dur) && !d._revealed) {
           d._revealed = true;
           dice.rollFinished[d.idx] = true;
-          // update displayed line immediately
-          const line = dice.rollNums.map((n,i) => dice.rollFinished[i] ? n : '-').join(' ・ ');
+          // update displayed line: show new number for finished dice, previous roll's number for others (if any)
+          const line = dice.rollNums.map((n,i) => dice.rollFinished[i] ? n : (lastNums ? lastNums[i] : '-')).join(' ・ ');
           vals.textContent = line;
-          // if all dice revealed, show total after short delay
+          // if all dice revealed, show total after short delay and remember this roll's numbers
           if(dice.rollFinished.every(Boolean)) {
             setTimeout(() => {
               const s = dice.rollNums.reduce((a,b)=>a+b,0);
               sum.textContent = s;
               sumTop.textContent = s;
+              // store for next roll
+              lastNums = dice.rollNums.slice();
             }, 200);
           }
         }
