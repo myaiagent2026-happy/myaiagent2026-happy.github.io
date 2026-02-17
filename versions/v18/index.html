@@ -95,14 +95,13 @@
     function rotFor(v){
       // Orient so top face (+Y) shows value v.
       // Materials mapping: +X=1, -X=6, +Y=2, -Y=5, +Z=3, -Z=4
-      // The following aligns the axis with the desired value to world +Y.
       const m = {
-        1: [0,0,-Math.PI/2],   // bring -X to +Y (swapped to fix 1/6 flip)
-        2: [0,0,0],
-        3: [-Math.PI/2,0,0],
-        4: [Math.PI/2,0,0],
-        5: [Math.PI,0,0],
-        6: [0,0,Math.PI/2]    // bring +X to +Y (swapped)
+        1: [0,0, Math.PI/2],   // +X -> +Y
+        2: [0,0,0],            // +Y -> +Y
+        3: [-Math.PI/2,0,0],   // +Z -> +Y
+        4: [ Math.PI/2,0,0],   // -Z -> +Y
+        5: [ Math.PI,0,0],     // -Y -> +Y
+        6: [0,0,-Math.PI/2]    // -X -> +Y
       };
       return m[v];
     }
