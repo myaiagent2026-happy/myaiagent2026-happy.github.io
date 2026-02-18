@@ -38,6 +38,7 @@
     .res{margin-top:12px;border:1px solid #ffffff1f;border-radius:14px;background:#0000002a;padding:12px;text-align:center}
     .vals{font-size:clamp(24px,6.2vw,32px);font-weight:900;letter-spacing:3px;color:#8ef59b;white-space:nowrap;overflow:hidden;text-overflow:clip}
     .sum{font-size:44px;font-weight:900}
+    .remark{margin-top:8px;color:#b8c8c1;font-size:12px;line-height:1.55;text-align:left;padding:0 4px}
     .tip{margin-top:8px;color:#89a594;font-size:13px}
   </style>
 </head>
@@ -55,6 +56,7 @@
       <div style="color:#9bc4a7">結果</div>
       <div class="vals" id="vals">- ・ - ・ - ・ - ・ -</div>
       <div class="sum" id="sum">0</div>
+      <div class="remark">💡 玩法：輪流叫骰，可以叫「3個2」、「4個5」等。<br>1點是萬能骰，可以當任何點數使用。<br>不相信對方可以「開」，輸者飲酒！</div>
       <div class="tip">提示：可輪流擲，方便朋友聚會玩大話骰</div>
     </section>
   </main>
@@ -79,7 +81,7 @@
       g.fillStyle='#f7fbff'; g.fillRect(0,0,256,256);
       g.strokeStyle='#c7d1da'; g.lineWidth=6; g.strokeRect(3,3,250,250);
       const pos={1:[[128,128]],2:[[64,64],[192,192]],3:[[64,64],[128,128],[192,192]],4:[[64,64],[192,64],[64,192],[192,192]],5:[[64,64],[192,64],[128,128],[64,192],[192,192]],6:[[64,64],[192,64],[64,128],[192,128],[64,192],[192,192]]};
-      g.fillStyle='#142131';
+      g.fillStyle = (n===1) ? '#d83b3b' : '#142131';
       for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x,y,22,0,Math.PI*2); g.fill(); }
       const t = new THREE.CanvasTexture(c); t.anisotropy=4; return t;
     }
