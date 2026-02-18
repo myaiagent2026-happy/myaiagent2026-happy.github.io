@@ -85,7 +85,8 @@
       <div class="sep"></div>
       <div id="privateHint" class="warn"></div>
       <div class="row" style="margin-top:8px">
-        <button id="showDiceBtn" class="btn btn-dark">睇我嘅骰（會有3D擲骰動畫）</button>
+        <button id="rollBtn" class="btn btn-gold">🎲 擲骰（本手）</button>
+        <button id="showDiceBtn" class="btn btn-dark">睇我嘅骰</button>
         <button id="hideDiceBtn" class="btn btn-dark hide">收起骰面</button>
       </div>
       <div class="sep"></div>
@@ -120,14 +121,28 @@
   // ===== 3D =====
   const canvas = qs('#view');
   const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.5));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.02;
+  renderer.toneMappingExposure = 1.08;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(36,1,0.1,100);
-  camera.position.set(0,6.8,8.2); camera.lookAt(0,-0.2,0);
-  scene.add(new THREE.HemisphereLight(0xe9ffd9,0x0f2d1c,1.0));
-  const d=new THREE.DirectionalLight(0xfff3df,1.0); d.position.set(1.0,9,3.4); scene.add(d);
+  camera.position.set(0,6.9,8.3); camera.lookAt(0,-0.3,0);
+  scene.add(new THREE.HemisphereLight(0xe9ffd9,0x0f2d1c,1.08));
+  const d=new THREE.DirectionalLight(0xfff3df,1.16);
+  d.position.set(0.8,9.4,3.2);
+  d.castShadow = true;
+  d.shadow.mapSize.set(1024,1024);
+  d.shadow.camera.near = 1;
+  d.shadow.camera.far = 24;
+  d.shadow.camera.left = -8;
+  d.shadow.camera.right = 8;
+  d.shadow.camera.top = 7;
+  d.shadow.camera.bottom = -7;
+  d.shadow.bias = -0.00012;
+  d.shadow.normalBias = 0.018;
+  scene.add(d);
 
   const FLOOR_Y=-0.83;
   function feltTexture(){
@@ -144,7 +159,9 @@
     ]
   );
   table.scale.set(1.5666666666666667,1,1.5666666666666667); // radius 9.4
-  table.position.set(0,FLOOR_Y-0.21,0.55); scene.add(table);
+  table.position.set(0,FLOOR_Y-0.21,0.55);
+  table.receiveShadow = true;
+  scene.add(table);
   const rail = new THREE.Mesh(
     new THREE.TorusGeometry(9.14,0.34,24,220),
     new THREE.MeshStandardMaterial({color:0x9e5f30,roughness:.44,metalness:.28})
@@ -152,20 +169,62 @@
   rail.rotation.x=Math.PI/2; rail.rotation.z=Math.PI; rail.position.set(0,FLOOR_Y+0.34,0.55); scene.add(rail);
 
   function faceTex(n){
-    const TEX=512; const c=document.createElement('canvas'); c.width=TEX; c.height=TEX; const g=c.getContext('2d');
-    const base=g.createLinearGradient(0,0,TEX,TEX); base.addColorStop(0,'#fff'); base.addColorStop(1,'#e9edf2'); g.fillStyle=base; g.fillRect(0,0,TEX,TEX);
-    const pos={1:[[256,256]],2:[[128,128],[384,384]],3:[[128,128],[256,256],[384,384]],4:[[128,128],[384,128],[128,384],[384,384]],5:[[128,128],[384,128],[256,256],[128,384],[384,384]],6:[[128,128],[384,128],[128,256],[384,256],[128,384],[384,384]]};
+    const TEX = 1536;
+    const SCALE = TEX / 256;
+    const c=document.createElement('canvas'); c.width=TEX; c.height=TEX;
+    const g=c.getContext('2d');
+    const base = g.createLinearGradient(0,0,TEX,TEX);
+    base.addColorStop(0,'#ffffff');
+    base.addColorStop(1,'#e9edf2');
+    g.fillStyle=base; g.fillRect(0,0,TEX,TEX);
+    const shine = g.createRadialGradient(TEX*0.30,TEX*0.26,TEX*0.02,TEX*0.30,TEX*0.26,TEX*0.55);
+    shine.addColorStop(0,'rgba(255,255,255,0.70)');
+    shine.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle = shine; g.fillRect(0,0,TEX,TEX);
+    g.strokeStyle='#cbd3dc'; g.lineWidth=5*SCALE; g.strokeRect(3*SCALE,3*SCALE,250*SCALE,250*SCALE);
+    const pos={1:[[128,128]],2:[[64,64],[192,192]],3:[[64,64],[128,128],[192,192]],4:[[64,64],[192,64],[64,192],[192,192]],5:[[64,64],[192,64],[128,128],[64,192],[192,192]],6:[[64,64],[192,64],[64,128],[192,128],[64,192],[192,192]]};
     g.fillStyle=(n===1)?'#ff2d2d':'#1b2736';
-    for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x,y,42,0,Math.PI*2); g.fill(); }
-    return new THREE.CanvasTexture(c);
+    for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x*SCALE,y*SCALE,21.5*SCALE,0,Math.PI*2); g.fill(); }
+    const t = new THREE.CanvasTexture(c);
+    t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
+    return t;
   }
-  const materialsFor=()=>[1,6,2,5,3,4].map(v=>new THREE.MeshPhysicalMaterial({map:faceTex(v),roughness:.12,metalness:.04,clearcoat:0.7,clearcoatRoughness:0.15}));
-  const geo = new THREE.BoxGeometry(1.65,1.65,1.65,8,8,8);
+  const materialsFor=()=>[1,6,2,5,3,4].map(v=>new THREE.MeshPhysicalMaterial({map:faceTex(v),roughness:.12,metalness:.04,clearcoat:0.8,clearcoatRoughness:0.1}));
+  function roundedCubeGeometry(size=1.65, radius=0.25, segments=12){
+    const geo = new THREE.BoxGeometry(size,size,size,segments,segments,segments);
+    const pos = geo.attributes.position;
+    const half = size/2;
+    const inner = half - radius;
+    const v = new THREE.Vector3();
+    const clamped = new THREE.Vector3();
+    const n = new THREE.Vector3();
+    for(let i=0;i<pos.count;i++){
+      v.fromBufferAttribute(pos,i);
+      clamped.set(
+        Math.max(-inner, Math.min(inner, v.x)),
+        Math.max(-inner, Math.min(inner, v.y)),
+        Math.max(-inner, Math.min(inner, v.z))
+      );
+      n.copy(v).sub(clamped);
+      if(n.lengthSq()>0){
+        n.normalize().multiplyScalar(radius);
+        v.copy(clamped).add(n);
+        pos.setXYZ(i,v.x,v.y,v.z);
+      }
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const geo = roundedCubeGeometry(1.65,0.25,12);
   const dice=[];
   const startX=-4.8, spacing=2.4;
   for(let i=0;i<5;i++){
     const m=new THREE.Mesh(geo,materialsFor());
-    m.position.set(startX+i*spacing,0,0); scene.add(m);
+    m.position.set(startX+i*spacing,0,0);
+    m.castShadow = true;
+    m.receiveShadow = true;
+    scene.add(m);
     dice.push({mesh:m,start:new THREE.Euler(),target:new THREE.Euler(),t0:0,dur:900,value:1});
   }
 
@@ -246,7 +305,7 @@
       qs('#roundInfo').textContent=`🏆 勝者：${alive[0].name}`;
       qs('#turnInfo').textContent='已結束';
       qs('#privateHint').textContent='遊戲完結，可重新整理再開新局。';
-      ['#bidBtn','#callBtn','#showDiceBtn','#hideDiceBtn'].forEach(s=>qs(s).disabled=true);
+      ['#bidBtn','#callBtn','#rollBtn','#showDiceBtn','#hideDiceBtn'].forEach(s=>qs(s).disabled=true);
       return;
     }
     qs('#roundInfo').textContent=`第 ${state.round} 回合`;
@@ -341,6 +400,7 @@
   qs('#playerCount').addEventListener('change',buildNameInputs);
   qs('#genNames').addEventListener('click',buildNameInputs);
   qs('#startBtn').addEventListener('click',startGame);
+  qs('#rollBtn').addEventListener('click',showDice);
   qs('#showDiceBtn').addEventListener('click',showDice);
   qs('#hideDiceBtn').addEventListener('click',()=>{state.showingDice=false; refresh();});
   qs('#bidBtn').addEventListener('click',doBid);
