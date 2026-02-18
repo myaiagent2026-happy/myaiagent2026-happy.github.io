@@ -65,6 +65,7 @@
   <script>
     const canvas = document.getElementById('view');
     const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
     camera.position.set(0, 4.2, 9.8);
@@ -76,14 +77,18 @@
     floor.rotation.x = -Math.PI/2; floor.position.y = -1.7; scene.add(floor);
 
     function faceTex(n){
-      const c=document.createElement('canvas'); c.width=256; c.height=256;
+      const TEX = 512;
+      const SCALE = TEX / 256;
+      const c=document.createElement('canvas'); c.width=TEX; c.height=TEX;
       const g=c.getContext('2d');
-      g.fillStyle='#f7fbff'; g.fillRect(0,0,256,256);
-      g.strokeStyle='#c7d1da'; g.lineWidth=6; g.strokeRect(3,3,250,250);
+      g.fillStyle='#f7fbff'; g.fillRect(0,0,TEX,TEX);
+      g.strokeStyle='#c7d1da'; g.lineWidth=6*SCALE; g.strokeRect(3*SCALE,3*SCALE,250*SCALE,250*SCALE);
       const pos={1:[[128,128]],2:[[64,64],[192,192]],3:[[64,64],[128,128],[192,192]],4:[[64,64],[192,64],[64,192],[192,192]],5:[[64,64],[192,64],[128,128],[64,192],[192,192]],6:[[64,64],[192,64],[64,128],[192,128],[64,192],[192,192]]};
       g.fillStyle = (n===1) ? '#ff3b30' : '#142131';
-      for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x,y,22,0,Math.PI*2); g.fill(); }
-      const t = new THREE.CanvasTexture(c); t.anisotropy=4; return t;
+      for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x*SCALE,y*SCALE,22*SCALE,0,Math.PI*2); g.fill(); }
+      const t = new THREE.CanvasTexture(c);
+      t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
+      return t;
     }
 
     const materialsFor = () => [1,6,2,5,3,4].map(v => new THREE.MeshStandardMaterial({map:faceTex(v), roughness:.28, metalness:.05}));
@@ -102,6 +107,7 @@
 
     function setSize(){
       const w=canvas.clientWidth, h=canvas.clientHeight;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w,h,false);
       camera.aspect = w/h; camera.updateProjectionMatrix();
     }
@@ -113,6 +119,8 @@
     const sum = document.getElementById('sum');
 
     let audioCtx=null, soundOn=true;
+    let rollId = 0;
+    let totalTimer = null;
     function ensureAudio(){ if(!audioCtx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) audioCtx=new AC(); } if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }
     function play(){ if(!soundOn||!audioCtx) return; const t=audioCtx.currentTime; [220,300,340,280].forEach((hz,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0.0001,t+i*0.04);g.gain.exponentialRampToValueAtTime(0.03,t+i*0.04+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.04+0.12);o.connect(g).connect(audioCtx.destination);o.start(t+i*0.04);o.stop(t+i*0.04+0.13);}); }
 
@@ -131,6 +139,9 @@
 
     function roll(playAudio=true){
       if(playAudio){ try{ensureAudio(); play();}catch(e){} }
+      rollId += 1;
+      if(totalTimer){ clearTimeout(totalTimer); totalTimer = null; }
+      const currentRollId = rollId;
       const nums = new Array(5).fill(null);
       const now = performance.now();
       dice.forEach((d,i)=>{
@@ -154,6 +165,7 @@
       sumTop.textContent = '0';
 
       // Shared state for this roll
+      dice.rollId = currentRollId;
       dice.rollNums = nums;
       dice.rollFinished = new Array(5).fill(false);
       // Reset per-die revealed flags
@@ -179,7 +191,9 @@
           vals.textContent = line;
           // if all dice revealed, show total after short delay
           if(dice.rollFinished.every(Boolean)) {
-            setTimeout(() => {
+            const doneRollId = dice.rollId;
+            totalTimer = setTimeout(() => {
+              if(doneRollId !== rollId) return; // ignore stale timers from previous runs
               const s = dice.rollNums.reduce((a,b)=>a+b,0);
               sum.textContent = s;
               sumTop.textContent = s;
