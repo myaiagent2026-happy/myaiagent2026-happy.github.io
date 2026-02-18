@@ -437,7 +437,7 @@
     initStage();
 
     /* === Usage Tracking (Google Apps Script) === */
-    const TRACK_ENDPOINT = "YOUR_APPS_SCRIPT_URL_HERE"; // <-- Replace with deployed URL
+    const TRACK_ENDPOINT = "https://script.google.com/macros/s/AKfycbyVn2PxaMF41wSLFVB0jrmsjDQ6gd7kAD7oR7bcIbo7Sgryldjk92A6bFmaMopUCq5s/exec";
     (function(){
       function sendEvent(type, extra={}) {
         if (TRACK_ENDPOINT.includes('YOUR_APPS_SCRIPT_URL_HERE')) return; // tracking disabled until URL set
