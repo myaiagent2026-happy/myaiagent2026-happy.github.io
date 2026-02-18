@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>大話骰｜v27 Stable (No Flash)</title>
+  <style>
+    :root{--bg:#0b2f1d;--bg2:#07160f;--text:#e9f6ea;--muted:#97b7a0;--die:52px;--depth:10px}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh;display:flex;justify-content:center;align-items:center;padding:10px;
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;color:var(--text);
+      background:radial-gradient(900px 500px at 50% 35%,#1d5a3a 0%,transparent 65%),linear-gradient(180deg,var(--bg),var(--bg2));}
+    .app{width:min(100%,430px)}
+    .title{text-align:center}.title h1{margin:0;font-size:40px}.sub{color:var(--muted);font-weight:600;letter-spacing:1px}
+    .pill{margin:12px auto;display:block;width:max-content;max-width:100%;white-space:nowrap;padding:8px 14px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff2a;color:#97e89f;font-weight:800;font-size:clamp(20px,5.5vw,34px)}
+    .stage{border:1px solid #ffffff1f;border-radius:18px;background:#0000002e;padding:10px;box-shadow:0 14px 30px #0000005a}
+    #view{width:100%;height:190px;border-radius:12px;display:block}
+    #fallback{display:none}
+    .row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;justify-items:center;min-height:92px;align-items:center}
+    .die{position:relative;width:calc(var(--die) + var(--depth));height:calc(var(--die) + var(--depth));filter:drop-shadow(0 8px 14px rgba(0,0,0,.42));-webkit-transform: translateZ(0); transform: translateZ(0)}
+    .cube2d{position:absolute;inset:0}
+    .front,.top,.side{position:absolute;border:1px solid #c6ced6}
+    .front{left:0;top:var(--depth);width:var(--die);height:var(--die);border-radius:12px;background:linear-gradient(145deg,#fff,#ecf2f7);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12%;gap:6%}
+    .top{left:var(--depth);top:0;width:var(--die);height:var(--depth);border-radius:8px 8px 0 0;background:linear-gradient(180deg,#fff,#e9eff6);transform:skewX(-45deg);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:1px 6px;gap:1px;align-items:center}
+    .side{left:var(--die);top:var(--depth);width:var(--depth);height:var(--die);border-radius:0 8px 8px 0;background:linear-gradient(180deg,#e9eff6,#dce5ee);transform:skewY(-45deg)}
+    .pip{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 35%,#2a3440,#111821)}
+    .pip-top{width:4px;height:4px;border-radius:50%;background:#1f2a37;justify-self:center;align-self:center}
+    .v1 .pip:nth-child(1){grid-area:2/2}
+    .v2 .pip:nth-child(1){grid-area:1/1}.v2 .pip:nth-child(2){grid-area:3/3}
+    .v3 .pip:nth-child(1){grid-area:1/1}.v3 .pip:nth-child(2){grid-area:2/2}.v3 .pip:nth-child(3){grid-area:3/3}
+    .v4 .pip:nth-child(1){grid-area:1/1}.v4 .pip:nth-child(2){grid-area:1/3}.v4 .pip:nth-child(3){grid-area:3/1}.v4 .pip:nth-child(4){grid-area:3/3}
+    .v5 .pip:nth-child(1){grid-area:1/1}.v5 .pip:nth-child(2){grid-area:1/3}.v5 .pip:nth-child(3){grid-area:2/2}.v5 .pip:nth-child(4){grid-area:3/1}.v5 .pip:nth-child(5){grid-area:3/3}
+    .v6 .pip:nth-child(1){grid-area:1/1}.v6 .pip:nth-child(2){grid-area:1/3}.v6 .pip:nth-child(3){grid-area:2/1}.v6 .pip:nth-child(4){grid-area:2/3}.v6 .pip:nth-child(5){grid-area:3/1}.v6 .pip:nth-child(6){grid-area:3/3}
+    .roll2d{animation:r .7s cubic-bezier(.22,.8,.34,1)}
+    @keyframes r{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-14px) rotate(-12deg)}55%{transform:translateY(6px) rotate(10deg)}100%{transform:translateY(0) rotate(0)}}
+    .btn{margin-top:12px;width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:34px;font-weight:900;letter-spacing:3px;color:#08220f;background:linear-gradient(180deg,#79e67f,#3ec65a);box-shadow:0 12px 24px #26b84a66}
+    .sound{margin:10px auto 0;background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:9px 16px;color:var(--muted);display:block}
+    .res{margin-top:12px;border:1px solid #ffffff1f;border-radius:14px;background:#0000002a;padding:12px;text-align:center}
+    .vals{font-size:clamp(24px,6.2vw,32px);font-weight:900;letter-spacing:3px;color:#8ef59b;white-space:nowrap;overflow:hidden;text-overflow:clip}
+    .sum{font-size:44px;font-weight:900}
+    .remark{margin-top:8px;color:#b8c8c1;font-size:12px;line-height:1.55;text-align:center !important;padding:0 4px}
+    .tip{margin-top:8px;color:#89a594;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="title">
+      <h1>🎲 大話骰</h1>
+      <div class="sub" id="mode">REAL 3D · CASINO STYLE</div>
+    </section>
+    <span class="pill">總點數：<span id="sumTop">0</span> ｜ 1點：<span id="onesTop">0</span>個</span>
+    <section class="stage"><canvas id="view"></canvas><div id="fallback"><div class="row" id="row"></div></div></section>
+    <button class="btn" id="roll">擲骰</button>
+    <button class="sound" id="sound">🔊 音效</button>
+    <section class="res">
+      <div style="color:#9bc4a7">結果</div>
+      <div class="vals" id="vals">- ・ - ・ - ・ - ・ -</div>
+      <div class="sum" id="sum">0</div>
+      <div class="remark">💡 玩法：輪流叫骰，可以叫「3個2」、「4個5」等。<br>1點是萬能骰，可以當任何點數使用。<br>不相信對方可以「開」，輸者飲酒！</div>
+      <div class="tip">提示：可輪流擲，方便朋友聚會玩大話骰</div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script>
+    const canvas = document.getElementById('view');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    camera.position.set(0, 4.2, 9.8);
+    camera.lookAt(0, 0, 0);
+
+    const light1 = new THREE.HemisphereLight(0xffffff, 0x1a3a26, 1.2); scene.add(light1);
+    const light2 = new THREE.DirectionalLight(0xffffff, 1.1); light2.position.set(4,8,5); scene.add(light2);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(26,10), new THREE.MeshStandardMaterial({color:0x11412a, roughness:.9, metalness:0}));
+    floor.rotation.x = -Math.PI/2; floor.position.y = -1.7; scene.add(floor);
+
+    function faceTex(n){
+      const TEX = 1024;
+      const SCALE = TEX / 256;
+      const c=document.createElement('canvas'); c.width=TEX; c.height=TEX;
+      const g=c.getContext('2d');
+
+      // emoji-like glossy white face
+      const base = g.createLinearGradient(0,0,TEX,TEX);
+      base.addColorStop(0,'#ffffff');
+      base.addColorStop(1,'#e9edf2');
+      g.fillStyle=base; g.fillRect(0,0,TEX,TEX);
+
+      const shine = g.createRadialGradient(TEX*0.30,TEX*0.26,TEX*0.02,TEX*0.30,TEX*0.26,TEX*0.55);
+      shine.addColorStop(0,'rgba(255,255,255,0.70)');
+      shine.addColorStop(1,'rgba(255,255,255,0)');
+      g.fillStyle = shine; g.fillRect(0,0,TEX,TEX);
+
+      g.strokeStyle='#cbd3dc'; g.lineWidth=5*SCALE; g.strokeRect(3*SCALE,3*SCALE,250*SCALE,250*SCALE);
+
+      const pos={1:[[128,128]],2:[[64,64],[192,192]],3:[[64,64],[128,128],[192,192]],4:[[64,64],[192,64],[64,192],[192,192]],5:[[64,64],[192,64],[128,128],[64,192],[192,192]],6:[[64,64],[192,64],[64,128],[192,128],[64,192],[192,192]]};
+      g.fillStyle = (n===1) ? '#ff2d2d' : '#1b2736';
+      for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x*SCALE,y*SCALE,21.5*SCALE,0,Math.PI*2); g.fill(); }
+      const t = new THREE.CanvasTexture(c);
+      t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
+      return t;
+    }
+
+    const materialsFor = () => [1,6,2,5,3,4].map(v => new THREE.MeshPhysicalMaterial({map:faceTex(v), roughness:.16, metalness:.03, clearcoat:0.55, clearcoatRoughness:0.18}));
+
+    function roundedCubeGeometry(size=1.65, radius=0.22, segments=8){
+      const geo = new THREE.BoxGeometry(size,size,size,segments,segments,segments);
+      const pos = geo.attributes.position;
+      const half = size/2;
+      const inner = half - radius;
+      const v = new THREE.Vector3();
+      const clamped = new THREE.Vector3();
+      const n = new THREE.Vector3();
+      for(let i=0;i<pos.count;i++){
+        v.fromBufferAttribute(pos,i);
+        clamped.set(
+          Math.max(-inner, Math.min(inner, v.x)),
+          Math.max(-inner, Math.min(inner, v.y)),
+          Math.max(-inner, Math.min(inner, v.z))
+        );
+        n.copy(v).sub(clamped);
+        if(n.lengthSq()>0){
+          n.normalize().multiplyScalar(radius);
+          v.copy(clamped).add(n);
+          pos.setXYZ(i,v.x,v.y,v.z);
+        }
+      }
+      pos.needsUpdate = true;
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    const dice = [];
+    const spacing = 2.4;
+    const startX = -4.8;
+    const diceGeo = roundedCubeGeometry(1.65,0.22,8);
+    for(let i=0;i<5;i++){
+      const die = new THREE.Mesh(diceGeo, materialsFor());
+      die.position.set(startX + i*spacing, 0, 0);
+      die.rotation.set(0,0,0);
+      scene.add(die);
+      dice.push({mesh:die, target:new THREE.Euler(), start:new THREE.Euler(), t0:0, dur:900, value:1});
+    }
+
+    function setSize(){
+      const w=canvas.clientWidth, h=canvas.clientHeight;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(w,h,false);
+      camera.aspect = w/h; camera.updateProjectionMatrix();
+    }
+    setSize();
+    window.addEventListener('resize',setSize);
+
+    const sumTop = document.getElementById('sumTop');
+    const onesTop = document.getElementById('onesTop');
+    const vals = document.getElementById('vals');
+    const sum = document.getElementById('sum');
+
+    let audioCtx=null, soundOn=true;
+    let rollId = 0;
+    let totalTimer = null;
+    function ensureAudio(){ if(!audioCtx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) audioCtx=new AC(); } if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }
+    function play(){ if(!soundOn||!audioCtx) return; const t=audioCtx.currentTime; [220,300,340,280].forEach((hz,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0.0001,t+i*0.04);g.gain.exponentialRampToValueAtTime(0.03,t+i*0.04+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.04+0.12);o.connect(g).connect(audioCtx.destination);o.start(t+i*0.04);o.stop(t+i*0.04+0.13);}); }
+
+    let spinNodes = null;
+    function startSpinSound(){
+      if(!soundOn||!audioCtx) return;
+      stopSpinSound();
+      const t = audioCtx.currentTime;
+      const o1 = audioCtx.createOscillator();
+      const o2 = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const trem = audioCtx.createOscillator();
+      const tremGain = audioCtx.createGain();
+
+      // lottery-slot style: playful, tonal, not noisy
+      o1.type = 'triangle';
+      o2.type = 'sine';
+      o1.frequency.setValueAtTime(660,t);
+      o2.frequency.setValueAtTime(990,t);
+      // tiny pitch drift to feel like spinning reels
+      o1.frequency.setValueAtTime(620,t+0.18);
+      o2.frequency.setValueAtTime(930,t+0.18);
+
+      trem.type = 'square';
+      trem.frequency.setValueAtTime(12,t);
+      tremGain.gain.setValueAtTime(0.008,t);
+      trem.connect(tremGain);
+      tremGain.connect(g.gain);
+
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.014,t+0.05); // quieter so it won't cover settle sound
+
+      o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+      o1.start(t); o2.start(t); trem.start(t);
+      spinNodes = {o1,o2,trem,g};
+    }
+    function stopSpinSound(){
+      if(!spinNodes||!audioCtx) return;
+      const t = audioCtx.currentTime;
+      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.02); }catch{}
+      try{ spinNodes.o1.stop(t+0.08); spinNodes.o2.stop(t+0.08); spinNodes.trem.stop(t+0.08);}catch{}
+      spinNodes = null;
+    }
+    function playSettle(i=0){
+      if(!soundOn||!audioCtx) return;
+      const t = audioCtx.currentTime;
+      // louder per-die landing cue
+      const o1 = audioCtx.createOscillator();
+      const g1 = audioCtx.createGain();
+      o1.type='triangle';
+      o1.frequency.setValueAtTime(820 - i*22, t);
+      o1.frequency.exponentialRampToValueAtTime(460 - i*16, t+0.055);
+      g1.gain.setValueAtTime(0.0001,t);
+      g1.gain.exponentialRampToValueAtTime(0.11,t+0.008);
+      g1.gain.exponentialRampToValueAtTime(0.0001,t+0.085);
+      o1.connect(g1).connect(audioCtx.destination);
+      o1.start(t); o1.stop(t+0.09);
+
+      const o2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      o2.type='sine';
+      o2.frequency.setValueAtTime(360 - i*10, t+0.025);
+      o2.frequency.exponentialRampToValueAtTime(220 - i*8, t+0.11);
+      g2.gain.setValueAtTime(0.0001,t+0.025);
+      g2.gain.exponentialRampToValueAtTime(0.07,t+0.042);
+      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+      o2.connect(g2).connect(audioCtx.destination);
+      o2.start(t+0.025); o2.stop(t+0.14);
+    }
+
+    function rotFor(v){
+      // Orient so TOP face (+Y) shows the rolled value v.
+      const m = {
+        1: [0,0, Math.PI/2],
+        6: [0,0,-Math.PI/2],
+        2: [0,0,0],
+        5: [Math.PI,0,0],
+        3: [-Math.PI/2,0,0],
+        4: [ Math.PI/2,0,0]
+      };
+      return m[v];
+    }
+
+    function roll(playAudio=true){
+      if(playAudio){ try{ensureAudio(); play();}catch(e){} }
+      rollId += 1;
+      // spinning sound disabled by request
+      stopSpinSound();
+      if(totalTimer){ clearTimeout(totalTimer); totalTimer = null; }
+      const currentRollId = rollId;
+      const nums = new Array(5).fill(null);
+      const now = performance.now();
+      dice.forEach((d,i)=>{
+        d.idx = i;
+        const v = Math.floor(Math.random()*6)+1;
+        nums[i] = v; d.value = v;
+        d.start.copy(d.mesh.rotation);
+        const [rx,ry,rz] = rotFor(v);
+        const spinX = 2*Math.PI*(10 + Math.floor(Math.random()*10));
+        const spinY = 2*Math.PI*(10 + Math.floor(Math.random()*10));
+        const spinZ = 2*Math.PI*(8 + Math.floor(Math.random()*8));
+        d.target.set(rx + spinX, ry + spinY, rz + spinZ);
+        // random stop order, but much faster settle
+        d.t0 = now + Math.floor(Math.random()*180);
+        d.dur = 1200 + Math.floor(Math.random()*1400);
+      });
+
+      // Reset result display every run
+      vals.textContent = '- ・ - ・ - ・ - ・ -';
+      sum.textContent = '0';
+      sumTop.textContent = '0';
+      onesTop.textContent = '0';
+
+      // Shared state for this roll
+      dice.rollId = currentRollId;
+      dice.rollNums = nums;
+      dice.rollFinished = new Array(5).fill(false);
+      // Reset per-die revealed flags
+      dice.forEach(d => d._revealed = false);
+    }
+
+    function animate(t){
+      for(const d of dice){
+        const p = Math.min(1, Math.max(0, (t - d.t0)/d.dur));
+        // fast settle near the end (snappier stop)
+        const e = 1 - Math.pow(1-p,1.35);
+        d.mesh.rotation.x = d.start.x + (d.target.x - d.start.x)*e;
+        d.mesh.rotation.y = d.start.y + (d.target.y - d.start.y)*e;
+        d.mesh.rotation.z = d.start.z + (d.target.z - d.start.z)*e;
+        d.mesh.position.y = (p<1)? Math.sin(p*Math.PI)*0.6 : 0;
+
+        // Reveal this die as soon as it finishes its spin
+        if(dice.rollFinished && t >= (d.t0 + d.dur) && !d._revealed) {
+          d._revealed = true;
+          dice.rollFinished[d.idx] = true;
+          try{ playSettle(d.idx); }catch(e){}
+          // update displayed line: show revealed numbers only
+          const line = dice.rollNums.map((n,i) => dice.rollFinished[i] ? n : '-').join(' ・ ');
+          vals.textContent = line;
+          // if all dice revealed, show total after short delay
+          if(dice.rollFinished.every(Boolean)) {
+            stopSpinSound();
+            const doneRollId = dice.rollId;
+            totalTimer = setTimeout(() => {
+              if(doneRollId !== rollId) return; // ignore stale timers from previous runs
+              const s = dice.rollNums.reduce((a,b)=>a+b,0);
+              const ones = dice.rollNums.filter(n=>n===1).length;
+              sum.textContent = s;
+              sumTop.textContent = s;
+              onesTop.textContent = ones;
+            }, 200);
+          }
+        }
+      }
+      renderer.render(scene,camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    document.getElementById('roll').addEventListener('click', ()=>roll(true));
+    document.getElementById('sound').addEventListener('click', (e)=>{ ensureAudio(); soundOn=!soundOn; if(!soundOn) stopSpinSound(); e.target.textContent=soundOn?'🔊 音效':'🔇 靜音'; e.target.style.opacity=soundOn?'1':'.6'; });
+
+    setTimeout(()=>roll(false),150);
+  </script>
+</body>
+</html>
