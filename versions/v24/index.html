@@ -247,8 +247,8 @@
     function roll(playAudio=true){
       if(playAudio){ try{ensureAudio(); play();}catch(e){} }
       rollId += 1;
+      // spinning sound disabled by request
       stopSpinSound();
-      if(playAudio){ try{startSpinSound();}catch(e){} }
       if(totalTimer){ clearTimeout(totalTimer); totalTimer = null; }
       const currentRollId = rollId;
       const nums = new Array(5).fill(null);
