@@ -164,6 +164,44 @@
     function ensureAudio(){ if(!audioCtx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) audioCtx=new AC(); } if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }
     function play(){ if(!soundOn||!audioCtx) return; const t=audioCtx.currentTime; [220,300,340,280].forEach((hz,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0.0001,t+i*0.04);g.gain.exponentialRampToValueAtTime(0.03,t+i*0.04+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.04+0.12);o.connect(g).connect(audioCtx.destination);o.start(t+i*0.04);o.stop(t+i*0.04+0.13);}); }
 
+    let spinNodes = null;
+    function startSpinSound(){
+      if(!soundOn||!audioCtx) return;
+      stopSpinSound();
+      const t = audioCtx.currentTime;
+      const o1 = audioCtx.createOscillator();
+      const o2 = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o1.type = 'sawtooth'; o2.type = 'triangle';
+      o1.frequency.setValueAtTime(140,t); o2.frequency.setValueAtTime(95,t);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.018,t+0.05);
+      o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+      o1.start(t); o2.start(t);
+      spinNodes = {o1,o2,g};
+    }
+    function stopSpinSound(){
+      if(!spinNodes||!audioCtx) return;
+      const t = audioCtx.currentTime;
+      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.04); }catch{}
+      try{ spinNodes.o1.stop(t+0.12); spinNodes.o2.stop(t+0.12);}catch{}
+      spinNodes = null;
+    }
+    function playSettle(i=0){
+      if(!soundOn||!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type='triangle';
+      o.frequency.setValueAtTime(520 - i*28, t);
+      o.frequency.exponentialRampToValueAtTime(360 - i*18, t+0.07);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.05,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t); o.stop(t+0.12);
+    }
+
     function rotFor(v){
       // Orient so TOP face (+Y) shows the rolled value v.
       const m = {
@@ -180,6 +218,8 @@
     function roll(playAudio=true){
       if(playAudio){ try{ensureAudio(); play();}catch(e){} }
       rollId += 1;
+      stopSpinSound();
+      if(playAudio){ try{startSpinSound();}catch(e){} }
       if(totalTimer){ clearTimeout(totalTimer); totalTimer = null; }
       const currentRollId = rollId;
       const nums = new Array(5).fill(null);
@@ -227,11 +267,13 @@
         if(dice.rollFinished && t >= (d.t0 + d.dur) && !d._revealed) {
           d._revealed = true;
           dice.rollFinished[d.idx] = true;
+          try{ playSettle(d.idx); }catch(e){}
           // update displayed line: show revealed numbers only
           const line = dice.rollNums.map((n,i) => dice.rollFinished[i] ? n : '-').join(' ・ ');
           vals.textContent = line;
           // if all dice revealed, show total after short delay
           if(dice.rollFinished.every(Boolean)) {
+            stopSpinSound();
             const doneRollId = dice.rollId;
             totalTimer = setTimeout(() => {
               if(doneRollId !== rollId) return; // ignore stale timers from previous runs
@@ -250,7 +292,7 @@
     requestAnimationFrame(animate);
 
     document.getElementById('roll').addEventListener('click', ()=>roll(true));
-    document.getElementById('sound').addEventListener('click', (e)=>{ ensureAudio(); soundOn=!soundOn; e.target.textContent=soundOn?'🔊 音效':'🔇 靜音'; e.target.style.opacity=soundOn?'1':'.6'; });
+    document.getElementById('sound').addEventListener('click', (e)=>{ ensureAudio(); soundOn=!soundOn; if(!soundOn) stopSpinSound(); e.target.textContent=soundOn?'🔊 音效':'🔇 靜音'; e.target.style.opacity=soundOn?'1':'.6'; });
 
     setTimeout(()=>roll(false),150);
   </script>
