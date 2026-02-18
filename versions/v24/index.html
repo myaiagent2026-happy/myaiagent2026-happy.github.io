@@ -172,60 +172,63 @@
       const o1 = audioCtx.createOscillator();
       const o2 = audioCtx.createOscillator();
       const g = audioCtx.createGain();
-      const lfo = audioCtx.createOscillator();
-      const lfoGain = audioCtx.createGain();
+      const trem = audioCtx.createOscillator();
+      const tremGain = audioCtx.createGain();
 
-      // clearly audible spinning texture
-      o1.type = 'sawtooth';
-      o2.type = 'square';
-      o1.frequency.setValueAtTime(220,t);
-      o2.frequency.setValueAtTime(170,t);
+      // lottery-slot style: playful, tonal, not noisy
+      o1.type = 'triangle';
+      o2.type = 'sine';
+      o1.frequency.setValueAtTime(660,t);
+      o2.frequency.setValueAtTime(990,t);
+      // tiny pitch drift to feel like spinning reels
+      o1.frequency.setValueAtTime(620,t+0.18);
+      o2.frequency.setValueAtTime(930,t+0.18);
 
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(7,t);
-      lfoGain.gain.setValueAtTime(0.02,t);
-      lfo.connect(lfoGain);
-      lfoGain.connect(g.gain);
+      trem.type = 'square';
+      trem.frequency.setValueAtTime(12,t);
+      tremGain.gain.setValueAtTime(0.008,t);
+      trem.connect(tremGain);
+      tremGain.connect(g.gain);
 
       g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.045,t+0.06);
+      g.gain.exponentialRampToValueAtTime(0.014,t+0.05); // quieter so it won't cover settle sound
 
       o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
-      o1.start(t); o2.start(t); lfo.start(t);
-      spinNodes = {o1,o2,lfo,g};
+      o1.start(t); o2.start(t); trem.start(t);
+      spinNodes = {o1,o2,trem,g};
     }
     function stopSpinSound(){
       if(!spinNodes||!audioCtx) return;
       const t = audioCtx.currentTime;
-      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.03); }catch{}
-      try{ spinNodes.o1.stop(t+0.10); spinNodes.o2.stop(t+0.10); spinNodes.lfo.stop(t+0.10);}catch{}
+      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.02); }catch{}
+      try{ spinNodes.o1.stop(t+0.08); spinNodes.o2.stop(t+0.08); spinNodes.trem.stop(t+0.08);}catch{}
       spinNodes = null;
     }
     function playSettle(i=0){
       if(!soundOn||!audioCtx) return;
       const t = audioCtx.currentTime;
-      // distinct "tick" + short "tok" so per-die landing is obvious
+      // louder per-die landing cue
       const o1 = audioCtx.createOscillator();
       const g1 = audioCtx.createGain();
       o1.type='triangle';
-      o1.frequency.setValueAtTime(760 - i*22, t);
-      o1.frequency.exponentialRampToValueAtTime(420 - i*16, t+0.055);
+      o1.frequency.setValueAtTime(820 - i*22, t);
+      o1.frequency.exponentialRampToValueAtTime(460 - i*16, t+0.055);
       g1.gain.setValueAtTime(0.0001,t);
-      g1.gain.exponentialRampToValueAtTime(0.085,t+0.008);
-      g1.gain.exponentialRampToValueAtTime(0.0001,t+0.075);
+      g1.gain.exponentialRampToValueAtTime(0.11,t+0.008);
+      g1.gain.exponentialRampToValueAtTime(0.0001,t+0.085);
       o1.connect(g1).connect(audioCtx.destination);
-      o1.start(t); o1.stop(t+0.08);
+      o1.start(t); o1.stop(t+0.09);
 
       const o2 = audioCtx.createOscillator();
       const g2 = audioCtx.createGain();
       o2.type='sine';
-      o2.frequency.setValueAtTime(300 - i*10, t+0.03);
-      o2.frequency.exponentialRampToValueAtTime(200 - i*8, t+0.10);
-      g2.gain.setValueAtTime(0.0001,t+0.03);
-      g2.gain.exponentialRampToValueAtTime(0.05,t+0.045);
-      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
+      o2.frequency.setValueAtTime(360 - i*10, t+0.025);
+      o2.frequency.exponentialRampToValueAtTime(220 - i*8, t+0.11);
+      g2.gain.setValueAtTime(0.0001,t+0.025);
+      g2.gain.exponentialRampToValueAtTime(0.07,t+0.042);
+      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
       o2.connect(g2).connect(audioCtx.destination);
-      o2.start(t+0.03); o2.stop(t+0.13);
+      o2.start(t+0.025); o2.stop(t+0.14);
     }
 
     function rotFor(v){
