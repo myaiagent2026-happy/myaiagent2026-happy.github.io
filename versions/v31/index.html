@@ -18,7 +18,7 @@
     .stage{position:relative;border:1px solid rgba(255,214,146,.26);border-radius:22px;background:linear-gradient(180deg,rgba(8,27,16,.58),rgba(8,20,13,.72));padding:10px;box-shadow:0 20px 36px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.10), inset 0 -20px 30px rgba(0,0,0,.28)}
     #view{width:100%;height:190px;border-radius:14px;display:block}
     #fallback{display:none}
-    .stage::after{content:'';position:absolute;left:7%;right:7%;bottom:8px;height:16px;border-radius:999px;background:linear-gradient(180deg,#b98247,#6e4020);opacity:.55;filter:blur(.2px)}
+    /* removed fake bottom bar for cleaner premium table */
     .row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;justify-items:center;min-height:92px;align-items:center}
     .die{position:relative;width:calc(var(--die) + var(--depth));height:calc(var(--die) + var(--depth));filter:drop-shadow(0 8px 14px rgba(0,0,0,.42));-webkit-transform: translateZ(0); transform: translateZ(0)}
     .cube2d{position:absolute;inset:0}
@@ -36,7 +36,7 @@
     .v6 .pip:nth-child(1){grid-area:1/1}.v6 .pip:nth-child(2){grid-area:1/3}.v6 .pip:nth-child(3){grid-area:2/1}.v6 .pip:nth-child(4){grid-area:2/3}.v6 .pip:nth-child(5){grid-area:3/1}.v6 .pip:nth-child(6){grid-area:3/3}
     .roll2d{animation:r .7s cubic-bezier(.22,.8,.34,1)}
     @keyframes r{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-14px) rotate(-12deg)}55%{transform:translateY(6px) rotate(10deg)}100%{transform:translateY(0) rotate(0)}}
-    .btn{margin-top:12px;width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:34px;font-weight:900;letter-spacing:3px;color:#2a1808;background:linear-gradient(180deg,#ffd98a,#ffb74c);box-shadow:0 12px 24px rgba(255,157,47,.45)}
+    .btn{margin-top:12px;width:100%;border:none;border-radius:16px;padding:14px 16px;font-size:34px;font-weight:900;letter-spacing:3px;color:#2a1808;background:linear-gradient(180deg,#ffd98a,#ffb74c);box-shadow:0 6px 14px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.35)}
     .sound{margin:10px auto 0;background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:9px 16px;color:var(--muted);display:block}
     .res{margin-top:12px;border:1px solid #ffffff1f;border-radius:14px;background:#0000002a;padding:12px;text-align:center}
     .vals{font-size:clamp(24px,6.2vw,32px);font-weight:900;letter-spacing:3px;color:#8ef59b;white-space:nowrap;overflow:hidden;text-overflow:clip}
@@ -120,11 +120,18 @@
       t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
       return t;
     }
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(26,10), new THREE.MeshStandardMaterial({map:feltTexture(), roughness:.92, metalness:0.02}));
-    floor.rotation.x = -Math.PI/2; floor.position.y = FLOOR_Y; floor.receiveShadow = true; scene.add(floor);
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(6.0, 160),
+      new THREE.MeshStandardMaterial({map:feltTexture(), roughness:.92, metalness:0.02})
+    );
+    floor.scale.set(2.0, 1.0, 0.92); // elliptical casino table top (removes side green corners)
+    floor.rotation.x = -Math.PI/2;
+    floor.position.y = FLOOR_Y;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
     const rail = new THREE.Mesh(
-      new THREE.TorusGeometry(8.4,0.34,20,130,Math.PI*0.93),
+      new THREE.TorusGeometry(8.45,0.34,28,260,Math.PI*0.93),
       new THREE.MeshStandardMaterial({color:0x9e5f30, roughness:.44, metalness:.28})
     );
     rail.rotation.x = Math.PI/2;
