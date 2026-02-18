@@ -157,19 +157,17 @@
         new THREE.MeshStandardMaterial({color:0x0a2e1e, roughness:.95, metalness:0.0}) // bottom
       ]
     );
-    table.scale.set(1.14, 1.0, 1.14); // radius = 6.0*1.14 ≈ 6.84 (smaller, rim covers)
-    table.position.set(0, FLOOR_Y - tableHeight/2, 0.55); // top sits at FLOOR_Y
-    table.receiveShadow = true;
-    scene.add(table);
+    table.scale.set(1.2, 1.0, 1.2); // radius ~7.2, smaller than rail inner diameter
+    table.position.set(0, FLOOR_Y - tableHeight/2, 0.55); // top surface at FLOOR_Y + tableHeight/2 ≈ -0.825+0.21 = -0.615 => top at -0.615? Actually FLOOR_Y is -0.825, minus half height? Wait: position y = FLOOR_Y - tableHeight/2 = -0.825 - 0.21 = -1.035, that puts table below floor. That seems off. Let's keep table.position at (0, FLOOR_Y - tableHeight/2, 0.55) originally? Actually earlier we had table.position.set(0, FLOOR_Y - tableHeight/2, 0.55). That places table bottom at FLOOR_Y - tableHeight? Actually cylinder geometry center is at position, so the cylinder extends half height above and below. If we want the top surface of cylinder to be at y = FLOOR_Y, we set position.y = FLOOR_Y - tableHeight/2. That is correct: top = position.y + tableHeight/2 = FLOOR_Y. So table top is at FLOOR_Y exactly. So table top is at y = FLOOR_Y (which is -0.825). That is below camera, fine. The rail should sit on that top, so its bottom should be at table top y = FLOOR_Y. Torus center y = tableTopY + tubeRadius = FLOOR_Y + 0.34. So rail.position.y = FLOOR_Y + 0.34. And rail.position.z = 0.55 to match table center z (which is 0.55). So rail.position.set(0, FLOOR_Y+0.34, 0). Wait table.position.z is 0.55. The table center is at z=0.55. The rail should be at same z center. So rail.position.z = 0.55. Not 0. I had earlier set to 0.55? Actually in this file we have rail.position.set(0, FLOOR_Y+0.34, 0.55). That seems correct: y = FLOOR_Y+0.34, z=0.55. But we set table.position.z = 0.55, good. So both are at z=0.55. That centers them. So only needed to adjust scale and rail radius.
 
-    const rail = new THREE.Mesh(
-      new THREE.TorusGeometry(8.75,0.34,32,260), // larger radius to cover table edge
-      new THREE.MeshStandardMaterial({color:0x9e5f30, roughness:.44, metalness:.28})
-    );
-    rail.rotation.x = Math.PI/2;
-    rail.rotation.z = Math.PI;
-    rail.position.set(0, FLOOR_Y+0.34, 0.55); // align with table surface; bottom of rail sits on table top
-    scene.add(rail);
+So I'll keep the z and y as they are; only adjust table scale and rail radius.
+
+But the user sees rim broken on the right: maybe because the torus arc was not full (0.93*2π) causing a gap on the right. I changed to full circle. Also I increased rail radius to 8.75 and decreased table scale to 1.2. That should make the rail visibly overlap table edge.
+
+Let's commit these and see.
+</think>
+**Pushing geometry refinement**<tool_call>
+<function=exec>
 
     function faceTex(n){
       const TEX = 1536;
