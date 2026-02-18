@@ -75,11 +75,11 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    camera.position.set(0, 4.2, 9.8);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(0, 5.2, 9.1);
+    camera.lookAt(0, -0.1, 0);
 
-    const light1 = new THREE.HemisphereLight(0xd9f4ff, 0x102a1b, 1.05); scene.add(light1);
-    const light2 = new THREE.DirectionalLight(0xffffff, 1.35); light2.position.set(4.5,8.5,5.2);
+    const light1 = new THREE.HemisphereLight(0xd9f4ff, 0x102a1b, 1.12); scene.add(light1);
+    const light2 = new THREE.DirectionalLight(0xffffff, 1.18); light2.position.set(0.8,9.4,3.2);
     light2.castShadow = true;
     light2.shadow.mapSize.set(2048,2048);
     light2.shadow.camera.near = 1;
@@ -88,28 +88,12 @@
     light2.shadow.camera.right = 8;
     light2.shadow.camera.top = 7;
     light2.shadow.camera.bottom = -7;
-    light2.shadow.bias = -0.00015;
+    light2.shadow.bias = -0.00012;
+    light2.shadow.normalBias = 0.018;
     scene.add(light2);
-    const FLOOR_Y = -0.86;
+    const FLOOR_Y = -0.825;
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(26,10), new THREE.MeshStandardMaterial({color:0x11412a, roughness:.82, metalness:0.04}));
     floor.rotation.x = -Math.PI/2; floor.position.y = FLOOR_Y; floor.receiveShadow = true; scene.add(floor);
-
-    function contactShadowTexture(){
-      const c = document.createElement('canvas');
-      c.width = 256; c.height = 256;
-      const g = c.getContext('2d');
-      const r = g.createRadialGradient(128,128,20,128,128,120);
-      r.addColorStop(0,'rgba(0,0,0,0.50)');
-      r.addColorStop(0.55,'rgba(0,0,0,0.22)');
-      r.addColorStop(1,'rgba(0,0,0,0)');
-      g.fillStyle = r;
-      g.fillRect(0,0,256,256);
-      const t = new THREE.CanvasTexture(c);
-      t.minFilter = THREE.LinearFilter;
-      t.magFilter = THREE.LinearFilter;
-      return t;
-    }
-    const contactShadowMap = contactShadowTexture();
 
     function faceTex(n){
       const TEX = 1536;
@@ -173,22 +157,13 @@
     const diceGeo = roundedCubeGeometry(1.65,0.25,12);
     for(let i=0;i<5;i++){
       const cx = startX + i*spacing;
-      const contact = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.05,2.05),
-        new THREE.MeshBasicMaterial({map:contactShadowMap, transparent:true, depthWrite:false, opacity:0.28})
-      );
-      contact.rotation.x = -Math.PI/2;
-      contact.position.set(cx, FLOOR_Y + 0.012, 0);
-      contact.renderOrder = 2;
-      scene.add(contact);
-
       const die = new THREE.Mesh(diceGeo, materialsFor());
       die.position.set(cx, 0, 0);
       die.rotation.set(0,0,0);
       die.castShadow = true;
       die.receiveShadow = true;
       scene.add(die);
-      dice.push({mesh:die, contact, target:new THREE.Euler(), start:new THREE.Euler(), t0:0, dur:900, value:1});
+      dice.push({mesh:die, target:new THREE.Euler(), start:new THREE.Euler(), t0:0, dur:900, value:1});
     }
 
     function setSize(){
@@ -351,16 +326,6 @@
         d.mesh.rotation.y = d.start.y + (d.target.y - d.start.y)*e;
         d.mesh.rotation.z = d.start.z + (d.target.z - d.start.z)*e;
         d.mesh.position.y = (p<1)? Math.sin(p*Math.PI)*0.6 : 0;
-
-        // contact shadow follows die height so it feels grounded
-        if(d.contact){
-          const h = d.mesh.position.y;
-          d.contact.position.x = d.mesh.position.x;
-          d.contact.position.z = d.mesh.position.z;
-          d.contact.material.opacity = Math.max(0.07, 0.30 - h*0.25);
-          const sc = 1 + h*0.85;
-          d.contact.scale.set(sc, sc, 1);
-        }
 
         // Reveal this die as soon as it finishes its spin
         if(dice.rollFinished && t >= (d.t0 + d.dur) && !d._revealed) {
