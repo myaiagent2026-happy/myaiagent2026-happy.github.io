@@ -172,34 +172,60 @@
       const o1 = audioCtx.createOscillator();
       const o2 = audioCtx.createOscillator();
       const g = audioCtx.createGain();
-      o1.type = 'sawtooth'; o2.type = 'triangle';
-      o1.frequency.setValueAtTime(140,t); o2.frequency.setValueAtTime(95,t);
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+
+      // clearly audible spinning texture
+      o1.type = 'sawtooth';
+      o2.type = 'square';
+      o1.frequency.setValueAtTime(220,t);
+      o2.frequency.setValueAtTime(170,t);
+
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(7,t);
+      lfoGain.gain.setValueAtTime(0.02,t);
+      lfo.connect(lfoGain);
+      lfoGain.connect(g.gain);
+
       g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.018,t+0.05);
+      g.gain.exponentialRampToValueAtTime(0.045,t+0.06);
+
       o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
-      o1.start(t); o2.start(t);
-      spinNodes = {o1,o2,g};
+      o1.start(t); o2.start(t); lfo.start(t);
+      spinNodes = {o1,o2,lfo,g};
     }
     function stopSpinSound(){
       if(!spinNodes||!audioCtx) return;
       const t = audioCtx.currentTime;
-      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.04); }catch{}
-      try{ spinNodes.o1.stop(t+0.12); spinNodes.o2.stop(t+0.12);}catch{}
+      try{ spinNodes.g.gain.cancelScheduledValues(t); spinNodes.g.gain.setTargetAtTime(0.0001,t,0.03); }catch{}
+      try{ spinNodes.o1.stop(t+0.10); spinNodes.o2.stop(t+0.10); spinNodes.lfo.stop(t+0.10);}catch{}
       spinNodes = null;
     }
     function playSettle(i=0){
       if(!soundOn||!audioCtx) return;
       const t = audioCtx.currentTime;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type='triangle';
-      o.frequency.setValueAtTime(520 - i*28, t);
-      o.frequency.exponentialRampToValueAtTime(360 - i*18, t+0.07);
-      g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.05,t+0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
-      o.connect(g).connect(audioCtx.destination);
-      o.start(t); o.stop(t+0.12);
+      // distinct "tick" + short "tok" so per-die landing is obvious
+      const o1 = audioCtx.createOscillator();
+      const g1 = audioCtx.createGain();
+      o1.type='triangle';
+      o1.frequency.setValueAtTime(760 - i*22, t);
+      o1.frequency.exponentialRampToValueAtTime(420 - i*16, t+0.055);
+      g1.gain.setValueAtTime(0.0001,t);
+      g1.gain.exponentialRampToValueAtTime(0.085,t+0.008);
+      g1.gain.exponentialRampToValueAtTime(0.0001,t+0.075);
+      o1.connect(g1).connect(audioCtx.destination);
+      o1.start(t); o1.stop(t+0.08);
+
+      const o2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      o2.type='sine';
+      o2.frequency.setValueAtTime(300 - i*10, t+0.03);
+      o2.frequency.exponentialRampToValueAtTime(200 - i*8, t+0.10);
+      g2.gain.setValueAtTime(0.0001,t+0.03);
+      g2.gain.exponentialRampToValueAtTime(0.05,t+0.045);
+      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
+      o2.connect(g2).connect(audioCtx.destination);
+      o2.start(t+0.03); o2.stop(t+0.13);
     }
 
     function rotFor(v){
