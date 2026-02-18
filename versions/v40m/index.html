@@ -3,49 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>大話骰 v40m｜多人模式（最多6人）</title>
+  <title>大話骰 v40m｜多人3D模式（最多6人）</title>
   <style>
-    :root{
-      --bg:#07130d; --card:#0c1e15; --line:#1a3a2b; --text:#e8f3ea; --muted:#9eb7a6;
-      --gold1:#ffe4a8; --gold2:#d89a34; --green:#2fc070; --danger:#ff6b6b;
-    }
+    :root{--bg:#07130d;--card:#0d2016;--line:#1e4632;--text:#e8f3ea;--muted:#a4bdaa;--gold1:#ffe4a8;--gold2:#d89a34;}
     *{box-sizing:border-box}
     body{margin:0;background:radial-gradient(1200px 900px at 50% 0%, #123424 0%, #07130d 55%, #030806 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif}
-    .app{max-width:860px;margin:0 auto;padding:14px}
+    .app{max-width:900px;margin:0 auto;padding:14px}
     h1{margin:6px 0 2px;font-size:34px;text-align:center}
     .sub{text-align:center;color:#d2bd88;font-weight:700;letter-spacing:1px;margin-bottom:10px}
     .card{background:linear-gradient(180deg,#10271b,#0b1d14);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .sep{height:1px;background:#1e4331;margin:10px 0}
+    .pill{padding:5px 9px;border:1px solid #2e5f43;border-radius:999px;background:#0a1b13;color:#cfead6;font-size:13px}
+    .big{font-size:20px;font-weight:800}
+    .muted{color:var(--muted)}
+    .warn{color:#ffd8a2}
+    .hide{display:none}
     label{font-size:13px;color:var(--muted)}
-    input,select,button,textarea{font:inherit}
+    input,select,button{font:inherit}
     input,select{background:#08150f;color:#eaf5ec;border:1px solid #224633;border-radius:10px;padding:8px 10px}
     .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
     .btn-gold{background:linear-gradient(180deg,var(--gold1),#f5c15f 45%,var(--gold2));color:#4c2b00;box-shadow:0 3px 0 #7a4b0e, inset 0 1px 0 #fff8da}
     .btn-dark{background:#173425;color:#ddf1e2;border:1px solid #2a5d42}
     .btn-danger{background:#7e1e1e;color:#ffe8e8;border:1px solid #b84848}
-    .pill{padding:5px 9px;border:1px solid #2e5f43;border-radius:999px;background:#0a1b13;color:#cfead6;font-size:13px}
     .players{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
     .pbox{border:1px solid #28553d;border-radius:12px;padding:8px;background:#0a1b13}
     .pname{font-weight:800}
     .dead{opacity:.45;filter:grayscale(1)}
-    .dice{font-size:34px;letter-spacing:3px;line-height:1.25;word-break:break-all}
-    .big{font-size:20px;font-weight:800}
     .log{max-height:230px;overflow:auto;background:#07130d;border:1px solid #234532;border-radius:10px;padding:8px;font-size:14px;line-height:1.5}
-    .sep{height:1px;background:#1e4331;margin:10px 0}
-    .muted{color:var(--muted)}
-    .hide{display:none}
-    .warn{color:#ffd8a2}
+    .stage{position:relative;overflow:hidden;border:1px solid rgba(255,214,146,.26);border-radius:18px;background:linear-gradient(180deg,rgba(8,27,16,.58),rgba(8,20,13,.72));padding:8px}
+    #view{width:100%;height:220px;display:block;border-radius:12px}
+    #myDice{font-size:15px;color:#d2ecd9;margin-top:6px;word-break:break-all}
   </style>
 </head>
 <body>
 <div class="app">
   <h1>🎲 大話骰</h1>
-  <div class="sub">v40m｜多人模式（2–6人）</div>
+  <div class="sub">v40m｜多人 3D 模式（2–6人）</div>
 
   <div id="setup" class="card">
     <div class="row" style="justify-content:space-between">
       <div class="big">開局設定</div>
-      <span class="pill">香港常用玩法：1點作萬能（叫1點時不當萬能）</span>
+      <span class="pill">香港常見：1點作萬能（叫1點時只計1）</span>
     </div>
     <div class="sep"></div>
     <div class="row">
@@ -56,7 +55,7 @@
     <div id="namesWrap" class="row" style="margin-top:8px"></div>
     <div class="row" style="margin-top:10px">
       <button id="startBtn" class="btn btn-gold">開始多人局</button>
-      <span class="muted">每人初始5粒骰，被捉錯就扣1粒，0粒即出局</span>
+      <span class="muted">每人5粒骰，被捉錯扣1粒，0粒出局</span>
     </div>
   </div>
 
@@ -70,6 +69,11 @@
       <div id="bidInfo" class="big">當前叫骰：未開始</div>
     </div>
 
+    <div class="card stage">
+      <canvas id="view"></canvas>
+      <div id="myDice" class="hide"></div>
+    </div>
+
     <div class="card">
       <div class="big">玩家狀態</div>
       <div class="sep"></div>
@@ -81,11 +85,9 @@
       <div class="sep"></div>
       <div id="privateHint" class="warn"></div>
       <div class="row" style="margin-top:8px">
-        <button id="showDiceBtn" class="btn btn-dark">顯示我的骰（私密）</button>
-        <button id="hideDiceBtn" class="btn btn-dark hide">隱藏骰面</button>
+        <button id="showDiceBtn" class="btn btn-dark">睇我嘅骰（會有3D擲骰動畫）</button>
+        <button id="hideDiceBtn" class="btn btn-dark hide">收起骰面</button>
       </div>
-      <div id="myDice" class="dice hide" style="margin-top:10px"></div>
-
       <div class="sep"></div>
       <div class="row">
         <label>出價：</label>
@@ -96,7 +98,7 @@
         <button id="bidBtn" class="btn btn-gold">出價</button>
         <button id="callBtn" class="btn btn-danger">開（質疑上家）</button>
       </div>
-      <div class="muted" style="margin-top:6px">出價規則：必須比當前叫骰更高（數量更大，或數量相同但點數更大）</div>
+      <div class="muted" style="margin-top:6px">規則：新出價必須更高（數量更大，或同數量但點數更大）</div>
     </div>
 
     <div class="card">
@@ -107,207 +109,174 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 (() => {
   const qs = s => document.querySelector(s);
-  const qsa = s => [...document.querySelectorAll(s)];
   const diceGlyph = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
-  const state = {
-    players: [], // {name,diceCount,dice[],alive}
-    currentTurn: 0,
-    round: 1,
-    bid: null, // {qty,face,by}
-    lastLoser: 0,
-    showingDice: false
-  };
+  const state = { players:[], currentTurn:0, round:1, bid:null, showingDice:false };
 
-  function initSetup(){
-    const pc = qs('#playerCount');
-    for(let i=2;i<=6;i++){
-      const o=document.createElement('option'); o.value=i; o.textContent=i; pc.appendChild(o);
-    }
-    pc.value='4';
-    buildNameInputs();
+  // ===== 3D =====
+  const canvas = qs('#view');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2.2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.02;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(36,1,0.1,100);
+  camera.position.set(0,6.8,8.2); camera.lookAt(0,-0.2,0);
+  scene.add(new THREE.HemisphereLight(0xe9ffd9,0x0f2d1c,1.0));
+  const d=new THREE.DirectionalLight(0xfff3df,1.0); d.position.set(1.0,9,3.4); scene.add(d);
+
+  const FLOOR_Y=-0.83;
+  function feltTexture(){
+    const c=document.createElement('canvas'); c.width=1024; c.height=512;
+    const g=c.getContext('2d'); g.fillStyle='#0a2e1e'; g.fillRect(0,0,1024,512);
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; return t;
+  }
+  const table = new THREE.Mesh(
+    new THREE.CylinderGeometry(6.0,6.0,0.42,180,1,false),
+    [
+      new THREE.MeshStandardMaterial({color:0x08220e,roughness:.9,metalness:.02}),
+      new THREE.MeshStandardMaterial({map:feltTexture(),roughness:.98,metalness:0}),
+      new THREE.MeshStandardMaterial({color:0x0a2e1e,roughness:.95,metalness:0})
+    ]
+  );
+  table.scale.set(1.5666666666666667,1,1.5666666666666667); // radius 9.4
+  table.position.set(0,FLOOR_Y-0.21,0.55); scene.add(table);
+  const rail = new THREE.Mesh(
+    new THREE.TorusGeometry(9.14,0.34,24,220),
+    new THREE.MeshStandardMaterial({color:0x9e5f30,roughness:.44,metalness:.28})
+  );
+  rail.rotation.x=Math.PI/2; rail.rotation.z=Math.PI; rail.position.set(0,FLOOR_Y+0.34,0.55); scene.add(rail);
+
+  function faceTex(n){
+    const TEX=512; const c=document.createElement('canvas'); c.width=TEX; c.height=TEX; const g=c.getContext('2d');
+    const base=g.createLinearGradient(0,0,TEX,TEX); base.addColorStop(0,'#fff'); base.addColorStop(1,'#e9edf2'); g.fillStyle=base; g.fillRect(0,0,TEX,TEX);
+    const pos={1:[[256,256]],2:[[128,128],[384,384]],3:[[128,128],[256,256],[384,384]],4:[[128,128],[384,128],[128,384],[384,384]],5:[[128,128],[384,128],[256,256],[128,384],[384,384]],6:[[128,128],[384,128],[128,256],[384,256],[128,384],[384,384]]};
+    g.fillStyle=(n===1)?'#ff2d2d':'#1b2736';
+    for(const [x,y] of pos[n]){ g.beginPath(); g.arc(x,y,42,0,Math.PI*2); g.fill(); }
+    return new THREE.CanvasTexture(c);
+  }
+  const materialsFor=()=>[1,6,2,5,3,4].map(v=>new THREE.MeshPhysicalMaterial({map:faceTex(v),roughness:.12,metalness:.04,clearcoat:0.7,clearcoatRoughness:0.15}));
+  const geo = new THREE.BoxGeometry(1.65,1.65,1.65,8,8,8);
+  const dice=[];
+  const startX=-4.8, spacing=2.4;
+  for(let i=0;i<5;i++){
+    const m=new THREE.Mesh(geo,materialsFor());
+    m.position.set(startX+i*spacing,0,0); scene.add(m);
+    dice.push({mesh:m,start:new THREE.Euler(),target:new THREE.Euler(),t0:0,dur:900,value:1});
   }
 
-  function buildNameInputs(){
-    const n = +qs('#playerCount').value;
-    const wrap = qs('#namesWrap');
-    wrap.innerHTML='';
-    for(let i=0;i<n;i++){
-      const inp=document.createElement('input');
-      inp.id='pname'+i;
-      inp.placeholder='玩家'+(i+1);
-      inp.value='玩家'+(i+1);
-      inp.style.minWidth='120px';
-      wrap.appendChild(inp);
-    }
+  function rotFor(v){
+    const m={1:[0,0,Math.PI/2],6:[0,0,-Math.PI/2],2:[0,0,0],5:[Math.PI,0,0],3:[-Math.PI/2,0,0],4:[Math.PI/2,0,0]};
+    return m[v];
   }
+  function setSize(){const w=canvas.clientWidth,h=canvas.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
+  setSize(); window.addEventListener('resize',setSize);
 
+  let currentNums=[1,1,1,1,1];
+  function rollTo(nums){
+    currentNums=nums.slice();
+    const now=performance.now();
+    dice.forEach((d,i)=>{
+      const v=nums[i]||1;
+      d.start.copy(d.mesh.rotation);
+      const [rx,ry,rz]=rotFor(v);
+      const spinX=2*Math.PI*(5+Math.floor(Math.random()*5));
+      const spinY=2*Math.PI*(5+Math.floor(Math.random()*5));
+      const spinZ=2*Math.PI*(4+Math.floor(Math.random()*4));
+      d.target.set(rx+spinX,ry+spinY,rz+spinZ);
+      d.t0=now+Math.floor(Math.random()*130);
+      d.dur=850+Math.floor(Math.random()*700);
+      d.value=v;
+    });
+  }
+  function initDiceOnes(){ dice.forEach(d=>{const [rx,ry,rz]=rotFor(1); d.mesh.rotation.set(rx,ry,rz);}); }
+  initDiceOnes();
+
+  function animate(t){
+    for(const d of dice){
+      const p=Math.min(1,Math.max(0,(t-d.t0)/d.dur));
+      const e=1-Math.pow(1-p,1.35);
+      d.mesh.rotation.x=d.start.x+(d.target.x-d.start.x)*e;
+      d.mesh.rotation.y=d.start.y+(d.target.y-d.start.y)*e;
+      d.mesh.rotation.z=d.start.z+(d.target.z-d.start.z)*e;
+      d.mesh.position.y=(p<1)?Math.sin(p*Math.PI)*0.6:0;
+    }
+    renderer.render(scene,camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  // ===== game logic =====
   function log(msg){
-    const el = qs('#log');
-    const t = new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'});
-    el.innerHTML = `<div>[${t}] ${msg}</div>` + el.innerHTML;
+    const el=qs('#log');
+    const t=new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'});
+    el.innerHTML=`<div>[${t}] ${msg}</div>`+el.innerHTML;
   }
-
-  function alivePlayers(){ return state.players.filter(p=>p.alive); }
-
-  function nextAlive(idx){
-    const n=state.players.length;
-    let i=idx;
-    for(let step=0;step<n;step++){
-      i=(i+1)%n;
-      if(state.players[i].alive) return i;
-    }
-    return idx;
+  function buildNameInputs(){
+    const n=+qs('#playerCount').value, wrap=qs('#namesWrap'); wrap.innerHTML='';
+    for(let i=0;i<n;i++){ const inp=document.createElement('input'); inp.id='pname'+i; inp.value='玩家'+(i+1); wrap.appendChild(inp); }
   }
-
-  function prevAlive(idx){
-    const n=state.players.length;
-    let i=idx;
-    for(let step=0;step<n;step++){
-      i=(i-1+n)%n;
-      if(state.players[i].alive) return i;
-    }
-    return idx;
-  }
-
-  function rollFor(p){
-    p.dice = Array.from({length:p.diceCount},()=>1+Math.floor(Math.random()*6));
-  }
-
-  function startRound(starterIdx){
-    state.round++;
-    state.bid = null;
-    state.currentTurn = starterIdx;
-    state.showingDice = false;
-    for(const p of state.players){ if(p.alive) rollFor(p); }
-    log(`🌀 新回合開始，由 <b>${state.players[starterIdx].name}</b> 先手`);
-    refresh();
-  }
-
+  function alivePlayers(){return state.players.filter(p=>p.alive);} 
+  function nextAlive(idx){ const n=state.players.length; let i=idx; for(let s=0;s<n;s++){i=(i+1)%n; if(state.players[i].alive) return i;} return idx; }
+  function rollFor(p){ p.dice=Array.from({length:p.diceCount},()=>1+Math.floor(Math.random()*6)); }
   function countForFace(face){
     let total=0;
-    for(const p of state.players){
-      if(!p.alive) continue;
+    for(const p of state.players){ if(!p.alive) continue;
       for(const d of p.dice){
         if(face===1){ if(d===1) total++; }
-        else { if(d===face || d===1) total++; } // 1作萬能
+        else { if(d===face||d===1) total++; }
       }
     }
     return total;
   }
-
-  function isHigherBid(newQty,newFace){
-    const b=state.bid;
-    if(!b) return newQty>=1 && newFace>=1 && newFace<=6;
-    if(newQty>b.qty) return true;
-    if(newQty===b.qty && newFace>b.face) return true;
+  function isHigherBid(q,f){
+    if(!state.bid) return q>=1&&f>=1&&f<=6;
+    if(q>state.bid.qty) return true;
+    if(q===state.bid.qty && f>state.bid.face) return true;
     return false;
   }
 
-  function playerBoardHTML(p,i){
-    const cls = 'pbox'+(p.alive?'':' dead');
-    const turn = (i===state.currentTurn && p.alive)?' <span class="pill">輪到</span>':'';
-    return `<div class="${cls}">
-      <div class="pname">${p.name}${turn}</div>
-      <div>剩餘骰數：<b>${p.diceCount}</b></div>
-      <div class="muted">${p.alive?'存活':'出局'}</div>
-    </div>`;
-  }
-
   function refresh(){
-    const alive = alivePlayers();
+    const alive=alivePlayers();
     if(alive.length===1){
-      qs('#turnInfo').textContent='已結束';
       qs('#roundInfo').textContent=`🏆 勝者：${alive[0].name}`;
+      qs('#turnInfo').textContent='已結束';
       qs('#privateHint').textContent='遊戲完結，可重新整理再開新局。';
-      qsa('#bidBtn,#callBtn,#showDiceBtn,#hideDiceBtn').forEach(el=>el.disabled=true);
+      ['#bidBtn','#callBtn','#showDiceBtn','#hideDiceBtn'].forEach(s=>qs(s).disabled=true);
       return;
     }
+    qs('#roundInfo').textContent=`第 ${state.round} 回合`;
+    qs('#turnInfo').textContent=`輪到：${state.players[state.currentTurn].name}`;
+    qs('#bidInfo').textContent = state.bid ? `當前叫骰：${state.bid.qty} 個 ${state.bid.face} 點（${state.players[state.bid.by].name}）` : '當前叫骰：未開始';
+    qs('#playersBoard').innerHTML = state.players.map((p,i)=>`<div class="pbox ${p.alive?'':'dead'}"><div class="pname">${p.name}${(i===state.currentTurn&&p.alive)?' <span class="pill">輪到</span>':''}</div><div>剩餘骰數：<b>${p.diceCount}</b></div><div class="muted">${p.alive?'存活':'出局'}</div></div>`).join('');
 
-    qs('#roundInfo').textContent = `第 ${state.round} 回合`;
-    qs('#turnInfo').textContent = `輪到：${state.players[state.currentTurn].name}`;
-    qs('#bidInfo').textContent = state.bid
-      ? `當前叫骰：${state.bid.qty} 個 ${state.bid.face} 點（${state.players[state.bid.by].name}）`
-      : '當前叫骰：未開始';
+    const cp=state.players[state.currentTurn];
+    qs('#privateHint').innerHTML=`📱 請把手機交給 <b>${cp.name}</b>。按「睇我嘅骰」會播放3D擲骰。`;
 
-    qs('#playersBoard').innerHTML = state.players.map(playerBoardHTML).join('');
-
-    const cp = state.players[state.currentTurn];
-    qs('#privateHint').innerHTML = `📱 請把手機交給 <b>${cp.name}</b> 查看自己的骰。`;
-
+    const myDiceEl=qs('#myDice');
     if(state.showingDice){
-      qs('#myDice').classList.remove('hide');
+      myDiceEl.classList.remove('hide');
+      myDiceEl.textContent=`${cp.name}：`+cp.dice.map(v=>diceGlyph[v-1]).join(' ');
       qs('#hideDiceBtn').classList.remove('hide');
       qs('#showDiceBtn').classList.add('hide');
-      qs('#myDice').textContent = cp.dice.map(v=>diceGlyph[v-1]).join(' ');
     }else{
-      qs('#myDice').classList.add('hide');
+      myDiceEl.classList.add('hide');
       qs('#hideDiceBtn').classList.add('hide');
       qs('#showDiceBtn').classList.remove('hide');
-      qs('#myDice').textContent = '';
     }
 
-    qs('#callBtn').disabled = !state.bid;
+    qs('#callBtn').disabled=!state.bid;
   }
 
-  function doBid(){
-    const qty=+qs('#qty').value;
-    const face=+qs('#face').value;
-    if(!isFinite(qty)||qty<1||face<1||face>6) return alert('出價格式錯誤');
-    if(!isHigherBid(qty,face)) return alert('出價必須比當前叫骰更高');
-
-    const p = state.players[state.currentTurn];
-    state.bid = {qty,face,by:state.currentTurn};
-    log(`🗣️ <b>${p.name}</b> 叫：${qty} 個 ${face} 點`);
-
-    state.currentTurn = nextAlive(state.currentTurn);
-    state.showingDice = false;
+  function startRound(starter){
+    state.round++; state.bid=null; state.currentTurn=starter; state.showingDice=false;
+    for(const p of state.players){ if(p.alive) rollFor(p); }
+    log(`🌀 新回合開始，由 <b>${state.players[starter].name}</b> 先手`);
     refresh();
-  }
-
-  function doCall(){
-    if(!state.bid) return;
-    const challengerIdx = state.currentTurn;
-    const bidderIdx = state.bid.by;
-    const challenger = state.players[challengerIdx];
-    const bidder = state.players[bidderIdx];
-
-    const actual = countForFace(state.bid.face);
-    const pass = actual >= state.bid.qty;
-
-    let loserIdx;
-    if(pass){
-      loserIdx = challengerIdx;
-      log(`🧨 <b>${challenger.name}</b> 開骰！實際有 ${actual} 粒（≥ ${state.bid.qty}），質疑失敗。`);
-    }else{
-      loserIdx = bidderIdx;
-      log(`🧨 <b>${challenger.name}</b> 開骰！實際有 ${actual} 粒（< ${state.bid.qty}），質疑成功。`);
-    }
-
-    // reveal all dice this round
-    const reveal = state.players
-      .filter(p=>p.alive)
-      .map(p=>`${p.name}：${p.dice.map(v=>diceGlyph[v-1]).join(' ')}`)
-      .join(' ｜ ');
-    log(`🎲 全桌骰面：${reveal}`);
-
-    const loser = state.players[loserIdx];
-    loser.diceCount = Math.max(0, loser.diceCount-1);
-    if(loser.diceCount===0){
-      loser.alive=false;
-      log(`☠️ <b>${loser.name}</b> 出局`);
-    }else{
-      log(`➖ <b>${loser.name}</b> 扣1粒骰，剩餘 ${loser.diceCount} 粒`);
-    }
-
-    // loser starts next round (if alive), otherwise next alive
-    let starter = loserIdx;
-    if(!state.players[starter].alive) starter = nextAlive(starter);
-
-    startRound(starter);
   }
 
   function startGame(){
@@ -317,33 +286,65 @@
       const name=(qs('#pname'+i).value||`玩家${i+1}`).trim();
       state.players.push({name,diceCount:5,dice:[],alive:true});
     }
-    state.round=0;
-    state.bid=null;
-    state.currentTurn=0;
-    for(const p of state.players) rollFor(p);
-
-    qs('#setup').classList.add('hide');
-    qs('#game').classList.remove('hide');
-
-    log('🎮 多人局開始（最多6人）');
+    state.round=0; state.bid=null; state.currentTurn=0;
+    qs('#setup').classList.add('hide'); qs('#game').classList.remove('hide');
+    log('🎮 多人局開始（2–6人）');
     startRound(0);
   }
 
-  // bind
-  qs('#genNames').addEventListener('click',buildNameInputs);
+  function showDice(){
+    const cp=state.players[state.currentTurn];
+    state.showingDice=true;
+    // animate exactly this player's dice values
+    const nums=cp.dice.slice();
+    while(nums.length<5) nums.push(1);
+    rollTo(nums);
+    refresh();
+  }
+
+  function doBid(){
+    const q=+qs('#qty').value, f=+qs('#face').value;
+    if(!isHigherBid(q,f)) return alert('出價必須更高');
+    const p=state.players[state.currentTurn];
+    state.bid={qty:q,face:f,by:state.currentTurn};
+    log(`🗣️ <b>${p.name}</b> 叫：${q} 個 ${f} 點`);
+    state.currentTurn=nextAlive(state.currentTurn);
+    state.showingDice=false;
+    refresh();
+  }
+
+  function doCall(){
+    if(!state.bid) return;
+    const challengerIdx=state.currentTurn;
+    const bidderIdx=state.bid.by;
+    const actual=countForFace(state.bid.face);
+    const pass=actual>=state.bid.qty;
+    const loserIdx=pass?challengerIdx:bidderIdx;
+
+    log(`🧨 <b>${state.players[challengerIdx].name}</b> 開骰：實際 ${actual} 粒 ${state.bid.face} 點`);
+    const reveal=state.players.filter(p=>p.alive).map(p=>`${p.name}：${p.dice.map(v=>diceGlyph[v-1]).join(' ')}`).join(' ｜ ');
+    log(`🎲 全桌骰面：${reveal}`);
+
+    const loser=state.players[loserIdx];
+    loser.diceCount=Math.max(0,loser.diceCount-1);
+    if(loser.diceCount===0){ loser.alive=false; log(`☠️ <b>${loser.name}</b> 出局`); }
+    else log(`➖ <b>${loser.name}</b> 扣1粒，剩 ${loser.diceCount} 粒`);
+
+    let starter=loserIdx; if(!state.players[starter].alive) starter=nextAlive(starter);
+    startRound(starter);
+  }
+
+  // bindings
+  const pc=qs('#playerCount'); for(let i=2;i<=6;i++){const o=document.createElement('option');o.value=i;o.textContent=i;pc.appendChild(o);} pc.value='4';
+  for(let i=1;i<=6;i++){const o=document.createElement('option');o.value=i;o.textContent=i;qs('#face').appendChild(o);} 
+  buildNameInputs();
   qs('#playerCount').addEventListener('change',buildNameInputs);
+  qs('#genNames').addEventListener('click',buildNameInputs);
   qs('#startBtn').addEventListener('click',startGame);
-  qs('#showDiceBtn').addEventListener('click',()=>{state.showingDice=true;refresh();});
-  qs('#hideDiceBtn').addEventListener('click',()=>{state.showingDice=false;refresh();});
+  qs('#showDiceBtn').addEventListener('click',showDice);
+  qs('#hideDiceBtn').addEventListener('click',()=>{state.showingDice=false; refresh();});
   qs('#bidBtn').addEventListener('click',doBid);
   qs('#callBtn').addEventListener('click',doCall);
-
-  // face select
-  const fs=qs('#face');
-  for(let i=1;i<=6;i++){
-    const o=document.createElement('option'); o.value=i; o.textContent=i; fs.appendChild(o);
-  }
-  initSetup();
 })();
 </script>
 </body>
