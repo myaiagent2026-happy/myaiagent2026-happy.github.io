@@ -241,6 +241,22 @@
       return m[v];
     }
 
+    function initStage(){
+      // starting stage: all ones
+      dice.forEach(d=>{
+        const [rx,ry,rz] = rotFor(1);
+        d.mesh.rotation.set(rx,ry,rz);
+        d.start.copy(d.mesh.rotation);
+        d.target.copy(d.mesh.rotation);
+        d.value = 1;
+        d._revealed = true;
+      });
+      vals.textContent = '1 ・ 1 ・ 1 ・ 1 ・ 1';
+      sum.textContent = '5';
+      sumTop.textContent = '5';
+      if (typeof onesTop !== 'undefined' && onesTop) onesTop.textContent = '5';
+    }
+
     function roll(playAudio=true){
       if(playAudio){ try{ensureAudio(); play();}catch(e){} }
       rollId += 1;
@@ -320,7 +336,7 @@
     document.getElementById('roll').addEventListener('click', ()=>roll(true));
     document.getElementById('sound').addEventListener('click', (e)=>{ ensureAudio(); soundOn=!soundOn; if(!soundOn) stopSpinSound(); e.target.textContent=soundOn?'🔊 音效':'🔇 靜音'; e.target.style.opacity=soundOn?'1':'.6'; });
 
-    setTimeout(()=>roll(false),150);
+    initStage();
   </script>
 </body>
 </html>
