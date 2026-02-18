@@ -163,7 +163,7 @@
     scene.add(table);
 
     const rail = new THREE.Mesh(
-      new THREE.TorusGeometry(8.45,0.34,32,260,Math.PI*2),
+      new THREE.TorusGeometry(8.45,0.34,32,260), // full circle by default
       new THREE.MeshStandardMaterial({color:0x9e5f30, roughness:.44, metalness:.28})
     );
     rail.rotation.x = Math.PI/2;
