@@ -435,6 +435,39 @@
     document.getElementById('sound').addEventListener('click', (e)=>{ ensureAudio(); soundOn=!soundOn; if(!soundOn) stopSpinSound(); e.target.textContent=soundOn?'🔊 音效':'🔇 靜音'; e.target.style.opacity=soundOn?'1':'.6'; });
 
     initStage();
+
+    /* === Usage Tracking (Google Apps Script) === */
+    const TRACK_ENDPOINT = "YOUR_APPS_SCRIPT_URL_HERE"; // <-- Replace with deployed URL
+    (function(){
+      function sendEvent(type, extra={}) {
+        if (TRACK_ENDPOINT.includes('YOUR_APPS_SCRIPT_URL_HERE')) return; // tracking disabled until URL set
+        const payload = {
+          event: type,
+          sessionId: (function(){
+            let id = localStorage.getItem('dice_session_id');
+            if (!id) {
+              id = 'sess_' + Math.random().toString(36).substr(2,9) + Date.now();
+              localStorage.setItem('dice_session_id', id);
+            }
+            return id;
+          })(),
+          timestamp: new Date().toISOString(),
+          ...extra
+        };
+        try { navigator.sendBeacon(TRACK_ENDPOINT, JSON.stringify(payload)); } catch(e){}
+      }
+      sendEvent('session_start');
+      let rollCount = 0;
+      const origRoll = window.roll;
+      window.roll = function(playAudio=true){
+        rollCount++;
+        sendEvent('roll');
+        return origRoll.apply(this, arguments);
+      };
+      window.addEventListener('beforeunload', function(){
+        sendEvent('session_end', { totalRolls: rollCount });
+      });
+    })();
   </script>
 </body>
 </html>
