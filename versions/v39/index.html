@@ -109,40 +109,9 @@
     function feltTexture(){
       const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
       const g = c.getContext('2d');
-      const grad = g.createLinearGradient(0,0,0,512);
-      grad.addColorStop(0,'#1b7a4f');
-      grad.addColorStop(0.55,'#136445');
-      grad.addColorStop(1,'#0f4e36');
-      g.fillStyle = grad; g.fillRect(0,0,1024,512);
-
-      // woven cloth feel: vertical and horizontal thread passes
-      g.globalAlpha = 0.10;
-      for(let x=0;x<1024;x+=3){
-        g.fillStyle = (x%9===0) ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.26)';
-        g.fillRect(x,0,1,512);
-      }
-      g.globalAlpha = 0.09;
-      for(let y=0;y<512;y+=3){
-        g.fillStyle = (y%9===0) ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.24)';
-        g.fillRect(0,y,1024,1);
-      }
-
-      // micro-fiber noise
-      g.globalAlpha = 0.07;
-      for(let i=0;i<2200;i++){
-        const x=Math.random()*1024,y=Math.random()*512,s=Math.random()*1.2+0.4;
-        g.fillStyle = Math.random()>0.5 ? '#ffffff' : '#000000';
-        g.fillRect(x,y,s,s);
-      }
-
-      // subtle casino arc lines
-      g.globalAlpha = 0.22;
-      g.strokeStyle = '#dec88f'; g.lineWidth = 4;
-      g.beginPath(); g.arc(512,370,240,Math.PI*1.06,Math.PI*1.94); g.stroke();
-      g.globalAlpha = 0.14;
-      g.lineWidth = 2;
-      g.beginPath(); g.arc(512,370,292,Math.PI*1.08,Math.PI*1.92); g.stroke();
-
+      // solid royal dark green
+      g.fillStyle = '#0a2e1e';
+      g.fillRect(0,0,1024,512);
       const t = new THREE.CanvasTexture(c);
       t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
       t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
@@ -152,12 +121,12 @@
     const table = new THREE.Mesh(
       new THREE.CylinderGeometry(6.0, 6.0, tableHeight, 240, 1, false),
       [
-        new THREE.MeshStandardMaterial({color:0x0f4a2f, roughness:.88, metalness:.03}), // side wall
+        new THREE.MeshStandardMaterial({color:0x08220e, roughness:.88, metalness:.03}), // side wall (darker)
         new THREE.MeshStandardMaterial({map:feltTexture(), roughness:.98, metalness:0.0}), // top felt
         new THREE.MeshStandardMaterial({color:0x0a2e1e, roughness:.95, metalness:0.0}) // bottom
       ]
     );
-    table.scale.set(1.14, 1.0, 1.14); // radius = 6.0*1.14 ≈ 6.84 (smaller, rim covers)
+    table.scale.set(1.428, 1.0, 1.428); // radius = 6.0*1.428 ≈ 8.57 (matches original premium size)
     table.position.set(0, FLOOR_Y - tableHeight/2, 0.55); // top sits at FLOOR_Y
     table.receiveShadow = true;
     scene.add(table);
