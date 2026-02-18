@@ -157,13 +157,13 @@
         new THREE.MeshStandardMaterial({color:0x0a2e1e, roughness:.95, metalness:0.0}) // bottom
       ]
     );
-    table.scale.set(1.14, 1.0, 1.14); // radius = 6.0*1.14 ≈ 6.84 (smaller, rim covers)
+    table.scale.set(1.428, 1.0, 1.428); // radius = 6.0*1.14 ≈ 6.84 (smaller, rim covers)
     table.position.set(0, FLOOR_Y - tableHeight/2, 0.55); // top sits at FLOOR_Y
     table.receiveShadow = true;
     scene.add(table);
 
     const rail = new THREE.Mesh(
-      new THREE.TorusGeometry(7.90,0.34,64,260), // rail inner radius matches table edge
+      new THREE.TorusGeometry(8.00,0.34,64,260), // rail inner radius matches table edge
       new THREE.MeshStandardMaterial({color:0x9e5f30, roughness:.44, metalness:.28})
     );
     rail.rotation.x = Math.PI/2;
